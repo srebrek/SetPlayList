@@ -1,0 +1,8 @@
+@Api_HostAddress = https://localhost:7101
+
+
+###
+GET {{Api_HostAddress}}/auth/spotify/login
+
+
+###
