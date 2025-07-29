@@ -1,16 +1,16 @@
 ﻿using SetPlayList.Core.Interfaces;
 
-namespace SetPlayList.Api.Spotify;
+namespace SetPlayList.Api.Services;
 
 public class SpotifyAuthService : ISpotifyAuthService
 {
     private readonly ISpotifyApiClient _spotifyApiClient;
-    private readonly ILogger _logger;
+    private readonly ILogger<SpotifyAuthService> _logger;
     private readonly string _stateCookieName = "spotify_auth_state";
     private readonly string _tokenCookieName = "spotify_token";
     private readonly int _cookieExpirationTime = 10; // Minute
 
-    public SpotifyAuthService(ISpotifyApiClient spotifyApiClient, ILogger logger)
+    public SpotifyAuthService(ISpotifyApiClient spotifyApiClient, ILogger<SpotifyAuthService> logger)
     {
         _spotifyApiClient = spotifyApiClient;
         _logger = logger;
@@ -33,7 +33,7 @@ public class SpotifyAuthService : ISpotifyAuthService
     public Task<string?> GetCurrentAccessTokenAsync(HttpContext context)
     {
         var token = context.Request.Cookies[_tokenCookieName];
-        return Task.FromResult<string?>(token);
+        return Task.FromResult(token);
     }
 
     public async Task<bool> HandleAuthorizationCallbackAsync(HttpContext context, string code, string state)

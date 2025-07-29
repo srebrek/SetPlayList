@@ -5,7 +5,7 @@ using SetPlayList.Core.DTOs;
 using SetPlayList.Core.Interfaces;
 using System.Text.Json;
 
-namespace SetPlayList.Api.Spotify;
+namespace SetPlayList.Api.Clients;
 
 public class SpotifyApiClient : ISpotifyApiClient
 {
@@ -53,6 +53,7 @@ public class SpotifyApiClient : ISpotifyApiClient
         try
         {
             var response = await _httpClient.SendAsync(tokenRequest);
+            var responseDebug = await response.Content.ReadAsStringAsync();
 
             if (!response.IsSuccessStatusCode)
             {

@@ -1,5 +1,6 @@
+using SetPlayList.Api.Clients;
 using SetPlayList.Api.Configuration;
-using SetPlayList.Api.Spotify;
+using SetPlayList.Api.Services;
 using SetPlayList.Core.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
