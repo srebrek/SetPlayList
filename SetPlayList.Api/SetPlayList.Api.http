@@ -6,3 +6,4 @@ GET {{Api_HostAddress}}/auth/spotify/login
 
 
 ###
+GET {{Api_HostAddress}}/setlist/63ab8613

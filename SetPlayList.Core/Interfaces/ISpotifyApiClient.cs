@@ -1,4 +1,4 @@
-﻿using SetPlayList.Core.DTOs;
+﻿using SetPlayList.Core.DTOs.Spotify;
 
 namespace SetPlayList.Core.Interfaces;
 public interface ISpotifyApiClient

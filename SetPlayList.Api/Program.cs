@@ -6,9 +6,10 @@ using SetPlayList.Core.Interfaces;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.Configure<SpotifyApiSettings>(builder.Configuration.GetSection("Spotify"));
-builder.Services.AddHttpContextAccessor();
+builder.Services.Configure<SetlistFmApiSettings>(builder.Configuration.GetSection("SetlistFm"));
 builder.Services.AddHttpClient<ISpotifyApiClient, SpotifyApiClient>();
 builder.Services.AddScoped<ISpotifyAuthService, SpotifyAuthService>();
+builder.Services.AddScoped<ISetlistFmApiClient, SetlistFmApiClient>();
 
 var app = builder.Build();
 
@@ -33,6 +34,13 @@ app.MapGet("/auth/spotify/callback", async (HttpContext context, ISpotifyAuthSer
     }
 
     return Results.Ok("Token saved.");
+});
+
+app.MapGet("/setlist/{setlistId}", async (ISetlistFmApiClient setlistFmApiClient, string setlistId) =>
+{
+    var setlist = await setlistFmApiClient.GetSetlistAsync(setlistId);
+
+    return Results.Ok(setlist);
 });
 
 app.Run();

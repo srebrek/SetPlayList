@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SetPlayList.Api.Configuration;
-using SetPlayList.Core.DTOs;
+using SetPlayList.Core.DTOs.Spotify;
 using SetPlayList.Core.Interfaces;
 using System.Text.Json;
 
@@ -53,8 +53,6 @@ public class SpotifyApiClient : ISpotifyApiClient
         try
         {
             var response = await _httpClient.SendAsync(tokenRequest);
-            var responseDebug = await response.Content.ReadAsStringAsync();
-
             if (!response.IsSuccessStatusCode)
             {
                 var errorContent = await response.Content.ReadAsStringAsync();

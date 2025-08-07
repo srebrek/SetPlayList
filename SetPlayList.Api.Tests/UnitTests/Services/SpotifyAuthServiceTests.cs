@@ -4,7 +4,7 @@ using Microsoft.Net.Http.Headers;
 using Moq;
 using SetPlayList.Api.Services;
 using SetPlayList.Api.Tests.UnitTests.Clients;
-using SetPlayList.Core.DTOs;
+using SetPlayList.Core.DTOs.Spotify;
 using SetPlayList.Core.Interfaces;
 
 namespace SetPlayList.Api.Tests.UnitTests.Services;

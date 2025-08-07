@@ -6,7 +6,7 @@ using System.Net;
 using System.Text.Json;
 using SetPlayList.Api.Configuration;
 using SetPlayList.Api.Clients;
-using SetPlayList.Core.DTOs;
+using SetPlayList.Core.DTOs.Spotify;
 
 namespace SetPlayList.Api.Tests.UnitTests.Clients;
 
@@ -21,8 +21,6 @@ public class SpotifyApiClientTests
     public SpotifyApiClientTests()
     {
         _settingsMock = new Mock<IOptions<SpotifyApiSettings>>();
-        _loggerMock = new Mock<ILogger<SpotifyApiClient>>();
-
         _settingsMock.Setup(s => s.Value).Returns(new SpotifyApiSettings
         {
             ClientId = "test_client_id",
@@ -30,9 +28,9 @@ public class SpotifyApiClientTests
             RedirectUri = "https://localhost/callback"
         });
 
+        _loggerMock = new Mock<ILogger<SpotifyApiClient>>();
         _httpMessageHandlerMock = new MockHttpMessageHandler();
         _httpClient = _httpMessageHandlerMock.ToHttpClient();
-
         _sut = new SpotifyApiClient(_httpClient, _settingsMock.Object, _loggerMock.Object);
     }
 
