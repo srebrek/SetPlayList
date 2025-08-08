@@ -14,7 +14,6 @@ public class SetlistFmApiClient : ISetlistFmApiClient
     private readonly ILogger<SetlistFmApiClient> _logger;
     private static readonly JsonSerializerOptions _jsonSerializerOptions = new(JsonSerializerDefaults.Web);
 
-
     public SetlistFmApiClient(HttpClient httpClient, IOptions<SetlistFmApiSettings> settings, ILogger<SetlistFmApiClient> logger)
     {
         _httpClient = httpClient;
@@ -22,7 +21,7 @@ public class SetlistFmApiClient : ISetlistFmApiClient
         _logger = logger;
     }
 
-    public async Task<Setlist?> GetSetlistAsync(string setlistId)
+    public async Task<(Setlist? setlist, HttpStatusCode httpStatusCode)> GetSetlistAsync(string setlistId)
     {
         var setlistRequest = new HttpRequestMessage(HttpMethod.Get, "https://api.setlist.fm/rest/1.0/setlist/" + setlistId);
         setlistRequest.Headers.Add("Accept", "application/json");
@@ -38,38 +37,38 @@ public class SetlistFmApiClient : ISetlistFmApiClient
                 {
                     _logger.LogWarning("Failed to retrieve the setlist. Status: {StatusCode}. Response: {ErrorResponse}",
                     response.StatusCode, responseContent);
-                    return null;
+                    return (null, HttpStatusCode.NotFound);
                 }
                 else
                 {
                     _logger.LogError("Failed to retrieve the setlist. Status: {StatusCode}. Response: {ErrorResponse}",
                         response.StatusCode, responseContent);
-                    return null;
+                    return (null, HttpStatusCode.BadGateway);
                 }
             }
 
             try
             {
-                var setlistResponse = await response.Content.ReadFromJsonAsync<Setlist>(_jsonSerializerOptions);
+                var setlist = await response.Content.ReadFromJsonAsync<Setlist>(_jsonSerializerOptions);
                 _logger.Log(LogLevel.Information, "Successfully retrieved setlist with ID: {setlistId}", setlistId);
-                return setlistResponse;
+                return (setlist, HttpStatusCode.OK);
             }
             catch (JsonException ex)
             {
                 var responseContent = await response.Content.ReadAsStringAsync();
                 _logger.LogWarning(ex, "Failed to deserialize the setlist response from SetlistFm. Response content: {ResponseContent}", responseContent);
-                return null;
+                return (null, HttpStatusCode.BadGateway);
             }
         }
         catch (HttpRequestException ex)
         {
             _logger.LogError(ex, "A network error occurred while trying to retrieve setlist.");
-            return null;
+            return (null, HttpStatusCode.BadGateway);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unhandled exception.");
-            return null;
+            return (null, HttpStatusCode.InternalServerError);
         }
     }
 }

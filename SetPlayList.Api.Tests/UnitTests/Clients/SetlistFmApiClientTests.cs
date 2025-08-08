@@ -37,7 +37,7 @@ public class SetlistFmApiClientTests
     #region GetSetlistAsync Tests
 
     [Fact]
-    public async Task GetSetlistAsync_ValidSetlistIdValidSecret_ReturnsSetlist()
+    public async Task GetSetlistAsync_ValidSetlistIdValidSecret_ReturnsSetlistAnd200()
     {
         // Arrange
         var setlistId = "63ab8613";
@@ -269,15 +269,16 @@ public class SetlistFmApiClientTests
         var result = await _sut.GetSetlistAsync(setlistId);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equivalent(expectedSetlist, result);
+        Assert.NotNull(result.setlist);
+        Assert.Equivalent(expectedSetlist, result.setlist);
+        Assert.Equal(HttpStatusCode.OK, result.httpStatusCode);
 
         // Verify logging
         _loggerMock.VerifyLog(LogLevel.Information, $"Successfully retrieved setlist with ID: {setlistId}");
     }
 
     [Fact]
-    public async Task GetSetlistAsync_InvalidSecret_ReturnsNull()
+    public async Task GetSetlistAsync_InvalidSecret_ReturnsNullAnd502()
     {
         // Arrange
         var setlistId = "validId";
@@ -288,20 +289,21 @@ public class SetlistFmApiClientTests
             """;
         _httpMessageHandlerMock
             .When(HttpMethod.Get, "https://api.setlist.fm/rest/1.0/setlist/" + setlistId)
-            .Respond(HttpStatusCode.Forbidden, "application/json", responseJson);
+            .Respond(HttpStatusCode.BadGateway, "application/json", responseJson);
 
         // Act
         var result = await _sut.GetSetlistAsync(setlistId);
 
         // Assert
-        Assert.Null(result);
+        Assert.Null(result.setlist);
+        Assert.Equal(HttpStatusCode.BadGateway, result.httpStatusCode);
 
         // Verify logging
-        _loggerMock.VerifyLog(LogLevel.Error, "Forbidden");
+        _loggerMock.VerifyLog(LogLevel.Error, "Failed to retrieve the setlist");
     }
 
     [Fact]
-    public async Task GetSetlistAsync_InvalidSetlistId_ReturnsNull()
+    public async Task GetSetlistAsync_InvalidSetlistId_ReturnsNullAnd404()
     {
         // Arrange
         var setlistId = "invalidId";
@@ -320,14 +322,15 @@ public class SetlistFmApiClientTests
         var result = await _sut.GetSetlistAsync(setlistId);
 
         // Assert
-        Assert.Null(result);
+        Assert.Null(result.setlist);
+        Assert.Equal(HttpStatusCode.NotFound, result.httpStatusCode);
 
         // Verify logging
         _loggerMock.VerifyLog(LogLevel.Warning, "Not Found");
     }
 
     [Fact]
-    public async Task GetSetlistAsync_InvalidResponseJson_ReturnsNull()
+    public async Task GetSetlistAsync_InvalidResponseJson_ReturnsNullAnd502()
     {
         // Arrange
         var setlistId = "validId";
@@ -340,14 +343,15 @@ public class SetlistFmApiClientTests
         var result = await _sut.GetSetlistAsync(setlistId);
 
         // Assert
-        Assert.Null(result);
+        Assert.Null(result.setlist);
+        Assert.Equal(HttpStatusCode.BadGateway, result.httpStatusCode);
 
         // Verify logging
         _loggerMock.VerifyLog(LogLevel.Warning, "Failed to deserialize the setlist response", typeof(JsonException));
     }
 
     [Fact]
-    public async Task GetSetlistAsync_NetworkErrorOccurs_ReturnsNull()
+    public async Task GetSetlistAsync_NetworkErrorOccurs_ReturnsNullAnd502()
     {
         // Arrange
         var setlistId = "validId";
@@ -359,7 +363,8 @@ public class SetlistFmApiClientTests
         var result = await _sut.GetSetlistAsync(setlistId);
 
         // Assert
-        Assert.Null(result);
+        Assert.Null(result.setlist);
+        Assert.Equal(HttpStatusCode.BadGateway, result.httpStatusCode);
 
         // Verify logging
         _loggerMock.VerifyLog(LogLevel.Error, "A network error occurred", typeof(HttpRequestException));
