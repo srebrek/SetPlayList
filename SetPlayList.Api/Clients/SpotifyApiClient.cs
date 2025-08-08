@@ -3,26 +3,24 @@ using Microsoft.Extensions.Options;
 using SetPlayList.Api.Configuration;
 using SetPlayList.Core.DTOs.Spotify;
 using SetPlayList.Core.Interfaces;
+using System.Net;
 using System.Text.Json;
 
 namespace SetPlayList.Api.Clients;
 
-public class SpotifyApiClient : ISpotifyApiClient
+public class SpotifyApiClient(
+    HttpClient httpClient, 
+    IOptions<SpotifyApiSettings> settings, 
+    ILogger<SpotifyApiClient> logger) 
+    : ISpotifyApiClient
 {
-    private readonly HttpClient _httpClient;
-    private readonly SpotifyApiSettings _settings;
-    private readonly ILogger<SpotifyApiClient> _logger;
+    private readonly HttpClient _httpClient = httpClient;
+    private readonly SpotifyApiSettings _settings = settings.Value;
+    private readonly ILogger<SpotifyApiClient> _logger = logger;
     private static readonly JsonSerializerOptions _jsonSerializerOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
     };
-
-    public SpotifyApiClient(HttpClient httpClient, IOptions<SpotifyApiSettings> settings, ILogger<SpotifyApiClient> logger)
-    {
-        _httpClient = httpClient;
-        _settings = settings.Value;
-        _logger = logger;
-    }
 
     public string GetAuthorizationUrl(string state)
     {
@@ -35,7 +33,7 @@ public class SpotifyApiClient : ISpotifyApiClient
                $"&state={state}";
     }
 
-    public async Task<TokenResponse?> ExchangeCodeForTokenAsync(string code)
+    public async Task<(AuthToken? authToken, HttpStatusCode httpStatusCode)> ExchangeCodeForTokenAsync(string code)
     {
         var authString = $"{_settings.ClientId}:{_settings.ClientSecret}";
         var authBytes = System.Text.Encoding.UTF8.GetBytes(authString);
@@ -58,32 +56,37 @@ public class SpotifyApiClient : ISpotifyApiClient
                 var errorContent = await response.Content.ReadAsStringAsync();
                 _logger.LogError("Failed to exchange authorization code for token. Status: {StatusCode}. Response: {ErrorResponse}",
                     response.StatusCode, errorContent);
-                return null;
+                return (null, HttpStatusCode.BadGateway);
             }
 
             try
             {
-                var tokenResponse = await response.Content.ReadFromJsonAsync<TokenResponse>(_jsonSerializerOptions);
-                if (tokenResponse is null || string.IsNullOrWhiteSpace(tokenResponse.AccessToken))
+                var authToken = await response.Content.ReadFromJsonAsync<AuthToken>(_jsonSerializerOptions);
+                if (authToken is null || string.IsNullOrWhiteSpace(authToken.AccessToken))
                 {
-                    _logger.LogWarning("Spotify API response for code exchange was successful (2xx), but the response body was empty or did not contain an access token.");
-                    return null;
+                    _logger.LogError("Spotify API response for code exchange was successful (2xx), but the response body was empty or did not contain an access token.");
+                    return (null, HttpStatusCode.BadGateway);
                 }
 
                 _logger.LogInformation("Successfully exchanged authorization code for an access token.");
-                return tokenResponse;
+                return (authToken, HttpStatusCode.OK);
             }
             catch (JsonException ex)
             {
                 var responseContent = await response.Content.ReadAsStringAsync();
                 _logger.LogError(ex, "Failed to deserialize the token response from Spotify. Response content: {ResponseContent}", responseContent);
-                return null;
+                return (null, HttpStatusCode.BadGateway);
             }
         }
         catch (HttpRequestException ex)
         {
             _logger.LogError(ex, "A network error occurred while trying to exchange the authorization code for a token.");
-            return null;
+            return (null, HttpStatusCode.BadGateway);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unhandled exception.");
+            return (null, HttpStatusCode.InternalServerError);
         }
     }
 }

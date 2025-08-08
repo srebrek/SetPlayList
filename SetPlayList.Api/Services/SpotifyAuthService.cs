@@ -1,20 +1,15 @@
 ﻿using SetPlayList.Core.Interfaces;
+using System.Net;
 
 namespace SetPlayList.Api.Services;
 
-public class SpotifyAuthService : ISpotifyAuthService
+public class SpotifyAuthService(ISpotifyApiClient spotifyApiClient, ILogger<SpotifyAuthService> logger) : ISpotifyAuthService
 {
-    private readonly ISpotifyApiClient _spotifyApiClient;
-    private readonly ILogger<SpotifyAuthService> _logger;
+    private readonly ISpotifyApiClient _spotifyApiClient = spotifyApiClient;
+    private readonly ILogger<SpotifyAuthService> _logger = logger;
     private readonly string _stateCookieName = "spotify_auth_state";
     private readonly string _tokenCookieName = "spotify_token";
     private readonly int _cookieExpirationTime = 10; // Minute
-
-    public SpotifyAuthService(ISpotifyApiClient spotifyApiClient, ILogger<SpotifyAuthService> logger)
-    {
-        _spotifyApiClient = spotifyApiClient;
-        _logger = logger;
-    }
 
     public string GetAuthorizationUrl(HttpContext context)
     {
@@ -48,8 +43,8 @@ public class SpotifyAuthService : ISpotifyAuthService
             return false;
         }
 
-        var tokenResponse = await _spotifyApiClient.ExchangeCodeForTokenAsync(code);
-        if (tokenResponse is null || string.IsNullOrEmpty(tokenResponse.AccessToken))
+        var (authToken, httpStatusCode) = await _spotifyApiClient.ExchangeCodeForTokenAsync(code);
+        if (httpStatusCode != HttpStatusCode.OK || authToken is null || string.IsNullOrEmpty(authToken.AccessToken))
         {
             _logger.LogError("Failed to handle Spotify authorization callback because a token could not be obtained from the API client.");
             return false;
@@ -61,7 +56,7 @@ public class SpotifyAuthService : ISpotifyAuthService
             Secure = true,
             SameSite = SameSiteMode.Lax,
         };
-        context.Response.Cookies.Append(_tokenCookieName, tokenResponse.AccessToken, cookieOptions);
+        context.Response.Cookies.Append(_tokenCookieName, authToken.AccessToken, cookieOptions);
 
         _logger.LogInformation("Successfully handled Spotify authorization callback and set authentication cookie for a user.");
 

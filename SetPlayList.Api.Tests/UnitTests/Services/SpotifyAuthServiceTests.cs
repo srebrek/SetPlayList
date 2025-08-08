@@ -4,8 +4,10 @@ using Microsoft.Net.Http.Headers;
 using Moq;
 using SetPlayList.Api.Services;
 using SetPlayList.Api.Tests.UnitTests.Clients;
+using SetPlayList.Api.Tests.UnitTests.Utilities;
 using SetPlayList.Core.DTOs.Spotify;
 using SetPlayList.Core.Interfaces;
+using System.Net;
 
 namespace SetPlayList.Api.Tests.UnitTests.Services;
 
@@ -52,19 +54,20 @@ public class SpotifyAuthServiceTests
     #region HandleAuthorizationCallbackAsync Tests
 
     [Fact]
-    public async Task HandleAuthorizationCallbackAsync_WhenStateIsValidAndApiClientSucceeds_ShouldReturnTrueAndSetTokenCookie()
+    public async Task HandleAuthorizationCallbackAsync_ValidStateAndApiClientSucceeds_ReturnsTrueAndSetsTokenCookie()
     {
         // Arrange
         var state = "valid_state_123";
         var code = "valid_code";
+        var testAccessToken = "test_access_token";
         var httpContext = new DefaultHttpContext();
 
         httpContext.Request.Headers.Cookie = new CookieHeaderValue("spotify_auth_state", state).ToString();
 
-        var tokenResponse = new TokenResponse("test_access_token", "default-scope", "Bearer", 3600, "refresh");
+        var token = new AuthToken(testAccessToken, "default-scope", "Bearer", 3600, "refresh");
         _apiClientMock
             .Setup(c => c.ExchangeCodeForTokenAsync(code))
-            .ReturnsAsync(tokenResponse);
+            .ReturnsAsync((token, HttpStatusCode.OK));
 
         // Act
         var result = await _sut.HandleAuthorizationCallbackAsync(httpContext, code, state);
@@ -73,13 +76,14 @@ public class SpotifyAuthServiceTests
         Assert.True(result);
 
         var setCookieHeader = httpContext.Response.Headers[HeaderNames.SetCookie].ToString();
-        Assert.Contains("spotify_token=test_access_token", setCookieHeader);
+        Assert.Contains($"spotify_token={testAccessToken}", setCookieHeader);
 
+        // Verify logging
         _loggerMock.VerifyLog(LogLevel.Information, "Successfully handled Spotify authorization callback");
     }
 
     [Fact]
-    public async Task HandleAuthorizationCallbackAsync_WhenStateIsInvalid_ShouldReturnFalseAndLogWarning()
+    public async Task HandleAuthorizationCallbackAsync_InvalidState_ReturnsFalse()
     {
         // Arrange
         var providedState = "invalid_state";
@@ -93,28 +97,30 @@ public class SpotifyAuthServiceTests
 
         // Assert
         Assert.False(result);
+
+        // Verify logging
         _loggerMock.VerifyLog(LogLevel.Warning, "state mismatch or missing");
     }
 
     [Fact]
-    public async Task HandleAuthorizationCallbackAsync_WhenApiClientFails_ShouldReturnFalseAndLogError()
+    public async Task HandleAuthorizationCallbackAsync_ApiClientFails_ReturnsFalse()
     {
         // Arrange
         var state = "valid_state";
         var code = "code_that_will_fail";
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Headers.Cookie = new CookieHeaderValue("spotify_auth_state", state).ToString();
-
-        // Konfigurujemy mocka, aby symulował błąd
         _apiClientMock
             .Setup(c => c.ExchangeCodeForTokenAsync(code))
-            .ReturnsAsync((TokenResponse?)null);
+            .ReturnsAsync((null, HttpStatusCode.BadGateway));
 
         // Act
         var result = await _sut.HandleAuthorizationCallbackAsync(httpContext, code, state);
 
         // Assert
         Assert.False(result);
+
+        // Verify logging
         _loggerMock.VerifyLog(LogLevel.Error, "a token could not be obtained");
     }
 
@@ -123,7 +129,7 @@ public class SpotifyAuthServiceTests
     #region LogoutAsync Tests
 
     [Fact]
-    public async Task LogoutAsync_WhenTokenCookieExists_ShouldDeleteCookieAndLogInformation()
+    public async Task LogoutAsync_TokenCookieExists_DeletesCookie()
     {
         // Arrange
         var httpContext = new DefaultHttpContext();
@@ -137,11 +143,12 @@ public class SpotifyAuthServiceTests
         Assert.Contains("spotify_token=;", setCookieHeader);
         Assert.Contains("expires=", setCookieHeader);
 
+        // Verify logging
         _loggerMock.VerifyLog(LogLevel.Information, "User is logging out");
     }
 
     [Fact]
-    public async Task LogoutAsync_WhenTokenCookieDoesNotExist_ShouldDoNothingAndLogWarning()
+    public async Task LogoutAsync_TokenCookieDoesNotExist_DoesNothing()
     {
         // Arrange
         var httpContext = new DefaultHttpContext();
@@ -153,23 +160,9 @@ public class SpotifyAuthServiceTests
         var setCookieHeader = httpContext.Response.Headers[HeaderNames.SetCookie].ToString();
         Assert.Empty(setCookieHeader);
 
+        // Verify logging
         _loggerMock.VerifyLog(LogLevel.Warning, "no authentication cookie was found");
     }
 
     #endregion
-}
-
-public static class LoggerTestExtensions
-{
-    public static void VerifyLog<T>(this Mock<ILogger<T>> loggerMock, LogLevel expectedLevel, string expectedMessageSubstring, Type? expectedExceptionType = null)
-    {
-        loggerMock.Verify(
-            x => x.Log(
-                It.Is<LogLevel>(level => level == expectedLevel),
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains(expectedMessageSubstring)),
-                It.Is<Exception>((ex, t) => ex == null || ex.GetType() == expectedExceptionType),
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-            Times.Once);
-    }
 }

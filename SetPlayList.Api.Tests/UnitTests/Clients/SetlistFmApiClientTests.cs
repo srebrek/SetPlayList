@@ -1,14 +1,14 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using RichardSzalay.MockHttp;
 using SetPlayList.Api.Clients;
 using SetPlayList.Api.Configuration;
-using SetPlayList.Api.Tests.UnitTests.Services;
 using SetPlayList.Core.DTOs.SetlistFm;
 using System.Net;
 using System.Text.Json;
+using SetPlayList.Api.Tests.UnitTests.Utilities;
+
 
 namespace SetPlayList.Api.Tests.UnitTests.Clients;
 
@@ -266,12 +266,12 @@ public class SetlistFmApiClientTests
             .Respond(HttpStatusCode.OK, "application/json", responseJson);
 
         // Act
-        var result = await _sut.GetSetlistAsync(setlistId);
+        var (setlist, httpStatusCode) = await _sut.GetSetlistAsync(setlistId);
 
         // Assert
-        Assert.NotNull(result.setlist);
-        Assert.Equivalent(expectedSetlist, result.setlist);
-        Assert.Equal(HttpStatusCode.OK, result.httpStatusCode);
+        Assert.NotNull(setlist);
+        Assert.Equivalent(expectedSetlist, setlist);
+        Assert.Equal(HttpStatusCode.OK, httpStatusCode);
 
         // Verify logging
         _loggerMock.VerifyLog(LogLevel.Information, $"Successfully retrieved setlist with ID: {setlistId}");
@@ -292,11 +292,11 @@ public class SetlistFmApiClientTests
             .Respond(HttpStatusCode.BadGateway, "application/json", responseJson);
 
         // Act
-        var result = await _sut.GetSetlistAsync(setlistId);
+        var (setlist, httpStatusCode) = await _sut.GetSetlistAsync(setlistId);
 
         // Assert
-        Assert.Null(result.setlist);
-        Assert.Equal(HttpStatusCode.BadGateway, result.httpStatusCode);
+        Assert.Null(setlist);
+        Assert.Equal(HttpStatusCode.BadGateway, httpStatusCode);
 
         // Verify logging
         _loggerMock.VerifyLog(LogLevel.Error, "Failed to retrieve the setlist");
@@ -319,11 +319,11 @@ public class SetlistFmApiClientTests
             .Respond(HttpStatusCode.NotFound, "application/json", responseJson);
 
         // Act
-        var result = await _sut.GetSetlistAsync(setlistId);
+        var (setlist, httpStatusCode) = await _sut.GetSetlistAsync(setlistId);
 
         // Assert
-        Assert.Null(result.setlist);
-        Assert.Equal(HttpStatusCode.NotFound, result.httpStatusCode);
+        Assert.Null(setlist);
+        Assert.Equal(HttpStatusCode.NotFound, httpStatusCode);
 
         // Verify logging
         _loggerMock.VerifyLog(LogLevel.Warning, "Not Found");
@@ -340,11 +340,11 @@ public class SetlistFmApiClientTests
             .Respond(HttpStatusCode.OK, "application/json", responseJson);
 
         // Act
-        var result = await _sut.GetSetlistAsync(setlistId);
+        var (setlist, httpStatusCode) = await _sut.GetSetlistAsync(setlistId);
 
         // Assert
-        Assert.Null(result.setlist);
-        Assert.Equal(HttpStatusCode.BadGateway, result.httpStatusCode);
+        Assert.Null(setlist);
+        Assert.Equal(HttpStatusCode.BadGateway, httpStatusCode);
 
         // Verify logging
         _loggerMock.VerifyLog(LogLevel.Warning, "Failed to deserialize the setlist response", typeof(JsonException));
@@ -360,11 +360,11 @@ public class SetlistFmApiClientTests
             .Throw(new HttpRequestException("Simulated network failure."));
 
         // Act
-        var result = await _sut.GetSetlistAsync(setlistId);
+        var (setlist, httpStatusCode) = await _sut.GetSetlistAsync(setlistId);
 
         // Assert
-        Assert.Null(result.setlist);
-        Assert.Equal(HttpStatusCode.BadGateway, result.httpStatusCode);
+        Assert.Null(setlist);
+        Assert.Equal(HttpStatusCode.BadGateway, httpStatusCode);
 
         // Verify logging
         _loggerMock.VerifyLog(LogLevel.Error, "A network error occurred", typeof(HttpRequestException));

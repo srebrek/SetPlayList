@@ -1,5 +1,5 @@
 ﻿namespace SetPlayList.Core.DTOs.Spotify;
-public record TokenResponse(
+public record AuthToken(
     string AccessToken, 
     string TokenType, 
     string Scope, 

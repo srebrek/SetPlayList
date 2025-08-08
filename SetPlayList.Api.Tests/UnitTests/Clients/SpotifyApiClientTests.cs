@@ -7,6 +7,8 @@ using System.Text.Json;
 using SetPlayList.Api.Configuration;
 using SetPlayList.Api.Clients;
 using SetPlayList.Core.DTOs.Spotify;
+using SetPlayList.Api.Tests.UnitTests.Utilities;
+
 
 namespace SetPlayList.Api.Tests.UnitTests.Clients;
 
@@ -17,6 +19,10 @@ public class SpotifyApiClientTests
     private readonly MockHttpMessageHandler _httpMessageHandlerMock;
     private readonly HttpClient _httpClient;
     private readonly SpotifyApiClient _sut;
+    private static readonly JsonSerializerOptions _jsonSerializerOptions = new ()
+    { 
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower 
+    };
 
     public SpotifyApiClientTests()
     {
@@ -37,7 +43,7 @@ public class SpotifyApiClientTests
     #region GetAuthorizationUrl Tests
 
     [Fact]
-    public void GetAuthorizationUrl_GivenValidState_ShouldReturnCorrectlyFormattedUrl()
+    public void GetAuthorizationUrl_ValidState_ReturnsCorrectlyFormattedUrl()
     {
         // Arrange
         var state = "my-unique-state-123";
@@ -61,36 +67,37 @@ public class SpotifyApiClientTests
     #region ExchangeCodeForTokenAsync Tests
 
     [Fact]
-    public async Task ExchangeCodeForTokenAsync_WhenApiReturnsSuccess_ShouldReturnTokenResponse()
+    public async Task ExchangeCodeForTokenAsync_ValidCode_ReturnsTokenResponse()
     {
         // Arrange
         var expectedToken = "BQD_test_token";
         var validCode = "valid_auth_code";
-        var responseDto = new TokenResponse(
+        var responseDto = new AuthToken(
             expectedToken, 
             "Bearer", 
             "playlist-modify-public playlist-modify-private user-read-private", 
             3600, 
             "xyz_refresh_token");
-        var responseJson = JsonSerializer.Serialize(responseDto, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
+        var responseJson = JsonSerializer.Serialize(responseDto, _jsonSerializerOptions);
 
         _httpMessageHandlerMock
             .When(HttpMethod.Post, "https://accounts.spotify.com/api/token")
             .Respond(HttpStatusCode.OK, "application/json", responseJson);
 
         // Act
-        var result = await _sut.ExchangeCodeForTokenAsync(validCode);
+        var (authToken, httpStatusCode) = await _sut.ExchangeCodeForTokenAsync(validCode);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(expectedToken, result.AccessToken);
+        Assert.NotNull(authToken);
+        Assert.Equal(expectedToken, authToken.AccessToken);
+        Assert.Equal(HttpStatusCode.OK, httpStatusCode);
 
         // Verify logging
         _loggerMock.VerifyLog(LogLevel.Information, "Successfully exchanged authorization code");
     }
 
     [Fact]
-    public async Task ExchangeCodeForTokenAsync_WhenApiReturnsNonSuccessStatusCode_ShouldReturnNullAndLogError()
+    public async Task ExchangeCodeForTokenAsync_InvalidCode_ReturnsNullAnd502r()
     {
         // Arrange
         var invalidCode = "invalid_auth_code";
@@ -101,17 +108,18 @@ public class SpotifyApiClientTests
             .Respond(HttpStatusCode.BadRequest, "application/json", errorResponseJson);
 
         // Act
-        var result = await _sut.ExchangeCodeForTokenAsync(invalidCode);
+        var (authToken, httpStatusCode) = await _sut.ExchangeCodeForTokenAsync(invalidCode);
 
         // Assert
-        Assert.Null(result);
+        Assert.Null(authToken);
+        Assert.Equal(HttpStatusCode.BadGateway, httpStatusCode);
 
         // Verify logging
         _loggerMock.VerifyLog(LogLevel.Error, "Failed to exchange authorization code for token");
     }
 
     [Fact]
-    public async Task ExchangeCodeForTokenAsync_WhenApiResponseIsInvalidJson_ShouldReturnNullAndLogJsonException()
+    public async Task ExchangeCodeForTokenAsync_ApiResponseIsInvalidJson_ReturnsNullAnd502()
     {
         // Arrange
         var invalidJson = "this is not valid json {";
@@ -121,17 +129,18 @@ public class SpotifyApiClientTests
             .Respond(HttpStatusCode.OK, "application/json", invalidJson);
 
         // Act
-        var result = await _sut.ExchangeCodeForTokenAsync("some_code");
+        var (authToken, httpStatusCode) = await _sut.ExchangeCodeForTokenAsync("some_code");
 
         // Assert
-        Assert.Null(result);
+        Assert.Null(authToken);
+        Assert.Equal(HttpStatusCode.BadGateway, httpStatusCode);
 
         // Verify logging
         _loggerMock.VerifyLog(LogLevel.Error, "Failed to deserialize the token response", typeof(JsonException));
     }
 
     [Fact]
-    public async Task ExchangeCodeForTokenAsync_WhenApiResponseIsMissingToken_ShouldReturnNullAndLogWarning()
+    public async Task ExchangeCodeForTokenAsync_ApiResponseIsMissingToken_ShouldReturnNullAnd502()
     {
         // Arrange
         var incompleteJson = "{\"token_type\":\"Bearer\",\"expires_in\":3600}";
@@ -141,17 +150,18 @@ public class SpotifyApiClientTests
             .Respond(HttpStatusCode.OK, "application/json", incompleteJson);
 
         // Act
-        var result = await _sut.ExchangeCodeForTokenAsync("some_code");
+        var (authToken, httpStatusCode) = await _sut.ExchangeCodeForTokenAsync("some_code");
 
         // Assert
-        Assert.Null(result);
+        Assert.Null(authToken);
+        Assert.Equal(HttpStatusCode.BadGateway, httpStatusCode);
 
         // Verify logging
-        _loggerMock.VerifyLog(LogLevel.Warning, "response body was empty or did not contain an access token");
+        _loggerMock.VerifyLog(LogLevel.Error, "response body was empty or did not contain an access token");
     }
 
     [Fact]
-    public async Task ExchangeCodeForTokenAsync_WhenNetworkErrorOccurs_ShouldReturnNullAndLogHttpRequestException()
+    public async Task ExchangeCodeForTokenAsync_NetworkErrorOccurs_ReturnsNullAnd502()
     {
         // Arrange
         _httpMessageHandlerMock
@@ -159,29 +169,15 @@ public class SpotifyApiClientTests
             .Throw(new HttpRequestException("Simulated network failure."));
 
         // Act
-        var result = await _sut.ExchangeCodeForTokenAsync("any_code");
+        var (authToken, httpStatusCode) = await _sut.ExchangeCodeForTokenAsync("any_code");
 
         // Assert
-        Assert.Null(result);
+        Assert.Null(authToken);
+        Assert.Equal(HttpStatusCode.BadGateway, httpStatusCode);
 
         // Verify logging
         _loggerMock.VerifyLog(LogLevel.Error, "A network error occurred", typeof(HttpRequestException));
     }
 
     #endregion
-}
-
-public static class LoggerTestExtensions
-{
-    public static void VerifyLog<T>(this Mock<ILogger<T>> loggerMock, LogLevel expectedLevel, string expectedMessageSubstring, Type? expectedExceptionType = null)
-    {
-        loggerMock.Verify(
-            x => x.Log(
-                It.Is<LogLevel>(level => level == expectedLevel),
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains(expectedMessageSubstring)),
-                It.Is<Exception>((ex, t) => ex == null || ex.GetType() == expectedExceptionType),
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-            Times.Once);
-    }
 }

@@ -7,19 +7,16 @@ using System.Text.Json;
 
 namespace SetPlayList.Api.Clients;
 
-public class SetlistFmApiClient : ISetlistFmApiClient
+public class SetlistFmApiClient(
+    HttpClient httpClient, 
+    IOptions<SetlistFmApiSettings> settings, 
+    ILogger<SetlistFmApiClient> logger) 
+    : ISetlistFmApiClient
 {
-    private readonly HttpClient _httpClient;
-    private readonly SetlistFmApiSettings _settings;
-    private readonly ILogger<SetlistFmApiClient> _logger;
+    private readonly HttpClient _httpClient = httpClient;
+    private readonly SetlistFmApiSettings _settings = settings.Value;
+    private readonly ILogger<SetlistFmApiClient> _logger = logger;
     private static readonly JsonSerializerOptions _jsonSerializerOptions = new(JsonSerializerDefaults.Web);
-
-    public SetlistFmApiClient(HttpClient httpClient, IOptions<SetlistFmApiSettings> settings, ILogger<SetlistFmApiClient> logger)
-    {
-        _httpClient = httpClient;
-        _settings = settings.Value;
-        _logger = logger;
-    }
 
     public async Task<(Setlist? setlist, HttpStatusCode httpStatusCode)> GetSetlistAsync(string setlistId)
     {
