@@ -1,14 +1,13 @@
-﻿using Moq;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Logging;
+using Moq;
 using RichardSzalay.MockHttp;
+using SetPlayList.Api.Clients;
+using SetPlayList.Api.Configuration;
+using SetPlayList.Api.Tests.UnitTests.Utilities;
+using SetPlayList.Core.DTOs.Spotify;
 using System.Net;
 using System.Text.Json;
-using SetPlayList.Api.Configuration;
-using SetPlayList.Api.Clients;
-using SetPlayList.Core.DTOs.Spotify;
-using SetPlayList.Api.Tests.UnitTests.Utilities;
-
 
 namespace SetPlayList.Api.Tests.UnitTests.Clients;
 
@@ -19,15 +18,15 @@ public class SpotifyApiClientTests
     private readonly MockHttpMessageHandler _httpMessageHandlerMock;
     private readonly HttpClient _httpClient;
     private readonly SpotifyApiClient _sut;
-    private static readonly JsonSerializerOptions _jsonSerializerOptions = new ()
-    { 
-        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower 
+    private static readonly JsonSerializerOptions _jsonSerializerOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
     };
 
     public SpotifyApiClientTests()
     {
         _settingsMock = new Mock<IOptions<SpotifyApiSettings>>();
-        _settingsMock.Setup(s => s.Value).Returns(new SpotifyApiSettings
+        _ = _settingsMock.Setup(s => s.Value).Returns(new SpotifyApiSettings
         {
             ClientId = "test_client_id",
             ClientSecret = "test_client_secret",
@@ -73,14 +72,14 @@ public class SpotifyApiClientTests
         var expectedToken = "BQD_test_token";
         var validCode = "valid_auth_code";
         var responseDto = new AuthToken(
-            expectedToken, 
-            "Bearer", 
-            "playlist-modify-public playlist-modify-private user-read-private", 
-            3600, 
+            expectedToken,
+            "Bearer",
+            "playlist-modify-public playlist-modify-private user-read-private",
+            3600,
             "xyz_refresh_token");
         var responseJson = JsonSerializer.Serialize(responseDto, _jsonSerializerOptions);
 
-        _httpMessageHandlerMock
+        _ = _httpMessageHandlerMock
             .When(HttpMethod.Post, "https://accounts.spotify.com/api/token")
             .Respond(HttpStatusCode.OK, "application/json", responseJson);
 
@@ -103,7 +102,7 @@ public class SpotifyApiClientTests
         var invalidCode = "invalid_auth_code";
         var errorResponseJson = "{\"error\":\"invalid_grant\",\"error_description\":\"Invalid authorization code\"}";
 
-        _httpMessageHandlerMock
+        _ = _httpMessageHandlerMock
             .When(HttpMethod.Post, "https://accounts.spotify.com/api/token")
             .Respond(HttpStatusCode.BadRequest, "application/json", errorResponseJson);
 
@@ -124,7 +123,7 @@ public class SpotifyApiClientTests
         // Arrange
         var invalidJson = "this is not valid json {";
 
-        _httpMessageHandlerMock
+        _ = _httpMessageHandlerMock
             .When(HttpMethod.Post, "https://accounts.spotify.com/api/token")
             .Respond(HttpStatusCode.OK, "application/json", invalidJson);
 
@@ -145,7 +144,7 @@ public class SpotifyApiClientTests
         // Arrange
         var incompleteJson = "{\"token_type\":\"Bearer\",\"expires_in\":3600}";
 
-        _httpMessageHandlerMock
+        _ = _httpMessageHandlerMock
             .When(HttpMethod.Post, "https://accounts.spotify.com/api/token")
             .Respond(HttpStatusCode.OK, "application/json", incompleteJson);
 
@@ -164,7 +163,7 @@ public class SpotifyApiClientTests
     public async Task ExchangeCodeForTokenAsync_NetworkErrorOccurs_ReturnsNullAnd502()
     {
         // Arrange
-        _httpMessageHandlerMock
+        _ = _httpMessageHandlerMock
             .When(HttpMethod.Post, "https://accounts.spotify.com/api/token")
             .Throw(new HttpRequestException("Simulated network failure."));
 

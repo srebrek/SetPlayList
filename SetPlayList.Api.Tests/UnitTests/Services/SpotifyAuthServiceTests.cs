@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Net.Http.Headers;
 using Moq;
 using SetPlayList.Api.Services;
-using SetPlayList.Api.Tests.UnitTests.Clients;
 using SetPlayList.Api.Tests.UnitTests.Utilities;
 using SetPlayList.Core.DTOs.Spotify;
 using SetPlayList.Core.Interfaces;
@@ -33,7 +32,7 @@ public class SpotifyAuthServiceTests
         var httpContext = new DefaultHttpContext();
         var expectedUrl = "https://spotify.com/auth/123";
 
-        _apiClientMock
+        _ = _apiClientMock
             .Setup(c => c.GetAuthorizationUrl(It.IsAny<string>()))
             .Returns(expectedUrl);
 
@@ -65,7 +64,7 @@ public class SpotifyAuthServiceTests
         httpContext.Request.Headers.Cookie = new CookieHeaderValue("spotify_auth_state", state).ToString();
 
         var token = new AuthToken(testAccessToken, "default-scope", "Bearer", 3600, "refresh");
-        _apiClientMock
+        _ = _apiClientMock
             .Setup(c => c.ExchangeCodeForTokenAsync(code))
             .ReturnsAsync((token, HttpStatusCode.OK));
 
@@ -110,7 +109,7 @@ public class SpotifyAuthServiceTests
         var code = "code_that_will_fail";
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Headers.Cookie = new CookieHeaderValue("spotify_auth_state", state).ToString();
-        _apiClientMock
+        _ = _apiClientMock
             .Setup(c => c.ExchangeCodeForTokenAsync(code))
             .ReturnsAsync((null, HttpStatusCode.BadGateway));
 

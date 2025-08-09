@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using SetPlayList.Api.Configuration;
 using SetPlayList.Core.DTOs.Spotify;
 using SetPlayList.Core.Interfaces;
@@ -9,9 +8,9 @@ using System.Text.Json;
 namespace SetPlayList.Api.Clients;
 
 public class SpotifyApiClient(
-    HttpClient httpClient, 
-    IOptions<SpotifyApiSettings> settings, 
-    ILogger<SpotifyApiClient> logger) 
+    HttpClient httpClient,
+    IOptions<SpotifyApiSettings> settings,
+    ILogger<SpotifyApiClient> logger)
     : ISpotifyApiClient
 {
     private readonly HttpClient _httpClient = httpClient;

@@ -4,11 +4,10 @@ using Moq;
 using RichardSzalay.MockHttp;
 using SetPlayList.Api.Clients;
 using SetPlayList.Api.Configuration;
+using SetPlayList.Api.Tests.UnitTests.Utilities;
 using SetPlayList.Core.DTOs.SetlistFm;
 using System.Net;
 using System.Text.Json;
-using SetPlayList.Api.Tests.UnitTests.Utilities;
-
 
 namespace SetPlayList.Api.Tests.UnitTests.Clients;
 
@@ -23,7 +22,7 @@ public class SetlistFmApiClientTests
     public SetlistFmApiClientTests()
     {
         _settingsMock = new Mock<IOptions<SetlistFmApiSettings>>();
-        _settingsMock.Setup(s => s.Value).Returns(new SetlistFmApiSettings
+        _ = _settingsMock.Setup(s => s.Value).Returns(new SetlistFmApiSettings
         {
             ClientSecret = "2137"
         });
@@ -75,53 +74,53 @@ public class SetlistFmApiClientTests
                 Set: new List<Set>
                 {
                     // Main Set
-                    new Set(
+                    new(
                         Name: null,
                         Encore: 0,
                         Song: new List<Song>
                         {
-                            new Song("Music for the Royal Fireworks", null, new Artist("27870d47-bb98-42d1-bf2b-c7e972e6befc", "George Frideric Handel", "Handel, George Frideric", "German‐British baroque composer", "https://www.setlist.fm/setlists/george-frideric-handel-7bd4ee68.html"), null, true),
-                            new Song("Ramm 4", null, null, null, false),
-                            new Song("Links 2 3 4", null, null, null, false),
-                            new Song("Keine Lust", null, null, null, false),
-                            new Song("Sehnsucht", null, null, null, false),
-                            new Song("Asche zu Asche", null, null, null, false),
-                            new Song("Mein Herz brennt", null, null, null, false),
-                            new Song("Puppe", null, null, null, false),
-                            new Song("Wiener Blut", null, null, null, false),
-                            new Song("Zeit", null, null, null, false),
-                            new Song("Deutschland", null, null, "Remix by Richard Z. Kruspe", true),
-                            new Song("Deutschland", null, null, null, false),
-                            new Song("Radio", null, null, null, false),
-                            new Song("Mein Teil", null, null, null, false),
-                            new Song("Du hast", null, null, null, false),
-                            new Song("Sonne", null, null, null, false)
+                            new("Music for the Royal Fireworks", null, new Artist("27870d47-bb98-42d1-bf2b-c7e972e6befc", "George Frideric Handel", "Handel, George Frideric", "German‐British baroque composer", "https://www.setlist.fm/setlists/george-frideric-handel-7bd4ee68.html"), null, true),
+                            new("Ramm 4", null, null, null, false),
+                            new("Links 2 3 4", null, null, null, false),
+                            new("Keine Lust", null, null, null, false),
+                            new("Sehnsucht", null, null, null, false),
+                            new("Asche zu Asche", null, null, null, false),
+                            new("Mein Herz brennt", null, null, null, false),
+                            new("Puppe", null, null, null, false),
+                            new("Wiener Blut", null, null, null, false),
+                            new("Zeit", null, null, null, false),
+                            new("Deutschland", null, null, "Remix by Richard Z. Kruspe", true),
+                            new("Deutschland", null, null, null, false),
+                            new("Radio", null, null, null, false),
+                            new("Mein Teil", null, null, null, false),
+                            new("Du hast", null, null, null, false),
+                            new("Sonne", null, null, null, false)
                         }
                     ),
                     // Encore 1
-                    new Set(
+                    new(
                         Name: null,
                         Encore: 1,
                         Song: new List<Song>
                         {
-                            new Song("Engel", new Artist("1e9d02a2-468a-4a53-ba46-6dbcd87b9595", "ABÉLARD", "Abélard", "French piano duo", "https://www.setlist.fm/setlists/abelard-53f78335.html"), null, "Piano version; performed on B-Stage", false),
-                            new Song("Ausländer", null, null, null, false),
-                            new Song("Du riechst so gut", null, null, null, false),
-                            new Song("Pussy", null, null, null, false),
-                            new Song("Ich will", null, null, null, false)
+                            new("Engel", new Artist("1e9d02a2-468a-4a53-ba46-6dbcd87b9595", "ABÉLARD", "Abélard", "French piano duo", "https://www.setlist.fm/setlists/abelard-53f78335.html"), null, "Piano version; performed on B-Stage", false),
+                            new("Ausländer", null, null, null, false),
+                            new("Du riechst so gut", null, null, null, false),
+                            new("Pussy", null, null, null, false),
+                            new("Ich will", null, null, null, false)
                         }
                     ),
                     // Encore 2
-                    new Set(
+                    new(
                         Name: null,
                         Encore: 2,
                         Song: new List<Song>
                         {
-                            new Song("Rammstein", null, null, null, false),
-                            new Song("Adieu", null, null, null, false),
-                            new Song("Sonne", null, null, "Piano version", true),
-                            new Song("Haifisch", null, null, "Haiswing Remix by Olsen Involtini", true),
-                            new Song("Lügen", null, null, "Instrumental", true)
+                            new("Rammstein", null, null, null, false),
+                            new("Adieu", null, null, null, false),
+                            new("Sonne", null, null, "Piano version", true),
+                            new("Haifisch", null, null, "Haiswing Remix by Olsen Involtini", true),
+                            new("Lügen", null, null, "Instrumental", true)
                         }
                     )
                 }
@@ -259,7 +258,7 @@ public class SetlistFmApiClientTests
             "url" : "https://www.setlist.fm/setlist/rammstein/2024/veltins-arena-gelsenkirchen-germany-63ab8613.html"
             }
             """;
-        _httpMessageHandlerMock
+        _ = _httpMessageHandlerMock
             .When(HttpMethod.Get, "https://api.setlist.fm/rest/1.0/setlist/" + setlistId)
             .WithHeaders("x-api-key", _settingsMock.Object.Value.ClientSecret)
             .WithHeaders("Accept", "application/json")
@@ -287,7 +286,7 @@ public class SetlistFmApiClientTests
               "message": "Forbidden"
             }
             """;
-        _httpMessageHandlerMock
+        _ = _httpMessageHandlerMock
             .When(HttpMethod.Get, "https://api.setlist.fm/rest/1.0/setlist/" + setlistId)
             .Respond(HttpStatusCode.BadGateway, "application/json", responseJson);
 
@@ -314,7 +313,7 @@ public class SetlistFmApiClientTests
               "message": "not found",
             }
             """;
-        _httpMessageHandlerMock
+        _ = _httpMessageHandlerMock
             .When(HttpMethod.Get, "https://api.setlist.fm/rest/1.0/setlist/" + setlistId)
             .Respond(HttpStatusCode.NotFound, "application/json", responseJson);
 
@@ -335,7 +334,7 @@ public class SetlistFmApiClientTests
         // Arrange
         var setlistId = "validId";
         var responseJson = "this is not valid json {";
-        _httpMessageHandlerMock
+        _ = _httpMessageHandlerMock
             .When(HttpMethod.Get, "https://api.setlist.fm/rest/1.0/setlist/" + setlistId)
             .Respond(HttpStatusCode.OK, "application/json", responseJson);
 
@@ -355,7 +354,7 @@ public class SetlistFmApiClientTests
     {
         // Arrange
         var setlistId = "validId";
-        _httpMessageHandlerMock
+        _ = _httpMessageHandlerMock
             .When(HttpMethod.Get, "https://api.setlist.fm/rest/1.0/setlist/" + setlistId)
             .Throw(new HttpRequestException("Simulated network failure."));
 

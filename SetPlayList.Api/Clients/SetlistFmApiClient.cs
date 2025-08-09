@@ -8,9 +8,9 @@ using System.Text.Json;
 namespace SetPlayList.Api.Clients;
 
 public class SetlistFmApiClient(
-    HttpClient httpClient, 
-    IOptions<SetlistFmApiSettings> settings, 
-    ILogger<SetlistFmApiClient> logger) 
+    HttpClient httpClient,
+    IOptions<SetlistFmApiSettings> settings,
+    ILogger<SetlistFmApiClient> logger)
     : ISetlistFmApiClient
 {
     private readonly HttpClient _httpClient = httpClient;
