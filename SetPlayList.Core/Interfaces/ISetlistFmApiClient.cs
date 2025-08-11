@@ -6,4 +6,5 @@ namespace SetPlayList.Core.Interfaces;
 public interface ISetlistFmApiClient
 {
     Task<(Setlist? setlist, HttpStatusCode httpStatusCode)> GetSetlistAsync(string setlistId);
+    Task<(Setlist? setlist, HttpStatusCode httpStatusCode)> GetSetlistFromUrlAsync(string setlistUrl);
 }

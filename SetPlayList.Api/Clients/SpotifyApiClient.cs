@@ -88,4 +88,55 @@ public class SpotifyApiClient(
             return (null, HttpStatusCode.InternalServerError);
         }
     }
+
+    // TODO: add unit tests
+    public async Task<(List<Track>? tracks, HttpStatusCode httpStatusCode)> SearchTopTracksAsync(string artistName, string trackName, int limit, string accessToken)
+    {
+        var query = $"artist:\"{artistName}\" track:\"{trackName}\"";
+        var url = $"https://api.spotify.com/v1/search?q={Uri.EscapeDataString(query)}&type=track&limit={limit}";
+
+        var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.Authorization = new("Bearer", accessToken);
+        request.Headers.Accept.Add(new("application/json"));
+
+        try
+        {
+            var response = await _httpClient.SendAsync(request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogError("Spotify search error. Status: {StatusCode}. Response: {ErrorResponse}",
+                    response.StatusCode, errorContent);
+                return (null, HttpStatusCode.BadGateway);
+            }
+
+            try
+            {
+                var searchResponse = await response.Content.ReadFromJsonAsync<SearchResponse>(_jsonSerializerOptions);
+                var debugString = await response.Content.ReadAsStringAsync();
+                if (searchResponse is null)
+                {
+                    throw new NotImplementedException();
+                }
+                return (searchResponse.Tracks.Items, HttpStatusCode.OK);
+            }
+            catch (JsonException ex)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync();
+                _logger.LogError(ex, "{ResponseContent}", responseContent);
+                return (null, HttpStatusCode.BadGateway);
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "");
+            return (null, HttpStatusCode.BadGateway);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "");
+            return (null, HttpStatusCode.InternalServerError);
+        }
+    }
 }

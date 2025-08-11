@@ -10,6 +10,7 @@ builder.Services.Configure<SetlistFmApiSettings>(builder.Configuration.GetSectio
 builder.Services.AddHttpClient<ISpotifyApiClient, SpotifyApiClient>();
 builder.Services.AddScoped<ISpotifyAuthService, SpotifyAuthService>();
 builder.Services.AddScoped<ISetlistFmApiClient, SetlistFmApiClient>();
+builder.Services.AddScoped<ISpotifyPlaylistService, SpotifyPlaylistService>();
 
 var app = builder.Build();
 
@@ -36,6 +37,13 @@ app.MapGet("/setlist/{setlistId}", async (ISetlistFmApiClient setlistFmApiClient
     var setlist = await setlistFmApiClient.GetSetlistAsync(setlistId);
 
     return Results.Ok(setlist);
+});
+
+app.MapGet("/playlist-preview/{setlistId}", async (ISpotifyPlaylistService spotifyPlaylistService, ISpotifyAuthService spotifyAuthService, string setlistId, HttpContext httpContext) =>
+{
+    var accessToken = await spotifyAuthService.GetCurrentAccessTokenAsync(httpContext);
+    var result = await spotifyPlaylistService.GeneratePreviewAsync(setlistId, accessToken);
+    return result.ProposedPlaylist;
 });
 
 app.Run();

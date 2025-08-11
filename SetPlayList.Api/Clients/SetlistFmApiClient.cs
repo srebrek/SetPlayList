@@ -4,6 +4,7 @@ using SetPlayList.Core.DTOs.SetlistFm;
 using SetPlayList.Core.Interfaces;
 using System.Net;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace SetPlayList.Api.Clients;
 
@@ -67,6 +68,31 @@ public class SetlistFmApiClient(
             _logger.LogError(ex, "Unhandled exception.");
             return (null, HttpStatusCode.InternalServerError);
         }
+    }
+
+    // TODO: add unit tests
+    public async Task<(Setlist? setlist, HttpStatusCode httpStatusCode)> GetSetlistFromUrlAsync(string setlistUrl)
+    {
+        var setlistId = ParseIdFromSetlistUrl(setlistUrl);
+        if (string.IsNullOrWhiteSpace(setlistId))
+        {
+            throw new NotImplementedException();
+        }
+
+        return await GetSetlistAsync(setlistId);
+    }
+
+    // TODO: add unit tests
+    private static string? ParseIdFromSetlistUrl(string setlistUrl)
+    {
+        if (string.IsNullOrWhiteSpace(setlistUrl))
+        {
+            return null;
+        }
+
+        var match = Regex.Match(setlistUrl, @"-([a-f0-9]+)\.html$");
+
+        return match.Success ? match.Groups[1].Value : null;
     }
 }
 
