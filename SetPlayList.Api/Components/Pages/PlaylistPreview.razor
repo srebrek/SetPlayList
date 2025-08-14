@@ -1,0 +1,48 @@
+﻿@page "/playlist-preview/{SetlistId}"
+@using SetPlayList.Core.Interfaces
+@using SetPlayList.Core.Models
+
+@inject ISpotifyPlaylistService PlaylistService
+@inject ISpotifyAuthService AuthService
+@inject IHttpContextAccessor HttpContextAccessor
+
+<h3>Podgląd playlisty</h3>
+
+@if (playlistPreview is not null)
+{
+    <h4>@playlistPreview.Name</h4>
+    <ul>
+        @foreach (var track in playlistPreview.Tracks)
+        {
+            <li>@track.OriginalSong.Name</li>
+        }
+    </ul>
+}
+else
+{
+    <p>Ładowanie podglądu...</p>
+}
+
+@code {
+    [Parameter]
+    public string? SetlistId { get; set; }
+
+    private ProposedPlaylist? playlistPreview;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var httpContext = HttpContextAccessor.HttpContext;
+        if (httpContext is null)
+        {
+            return;
+        }
+
+        var accessToken = await AuthService.GetCurrentAccessTokenAsync(httpContext);
+        if (string.IsNullOrEmpty(accessToken))
+        {
+            return;
+        }
+
+        (playlistPreview, var httpStatusCode) = await PlaylistService.GeneratePreviewAsync(SetlistId!, accessToken);
+    }
+}

@@ -1,0 +1,175 @@
+﻿@page "/"
+
+<PageTitle>Home</PageTitle>
+
+<nav class="navbar navbar-expand border-bottom"
+     style="--bs-nav-link-font-size: 1.2rem;">
+    <div class="container-fluid">
+        <ul class="navbar-nav me-auto">
+            <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="/">About</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="api/setlist/235eb897">Link</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<div class="fade-in">
+    <h2 class=" my-3 display-5 fw-bold mb-4">About Me</h2>
+    <p class="lead">
+        I am a second-year Computer Science student at the Warsaw University of Technology 
+        (Faculty of Mathematics and Information Science), where I immerse myself in the .NET ecosystem, 
+        with a particular focus on C#. I am passionate about developing robust and scalable applications, 
+        adhering strictly to SOLID principles, design patterns, and modern software testing approaches, 
+        a commitment best showcased by my custom MiniTest framework.
+    </p>
+    <p>
+        Currently, I am intensely expanding my expertise in designing and implementing REST APIs, 
+        leveraging the latest ASP.NET Core technologies to build efficient and secure web services. 
+        My skill set also extends to Blazor, enabling the creation of interactive and modern web interfaces. 
+        As a proactive and agile learner, I am committed to continuous improvement, staying abreast of 
+        industry trends and emerging technologies to deliver high-quality, maintainable solutions.
+    </p>
+    <p>
+        If you're seeking a dedicated and skilled .NET developer who is eager to contribute to innovative 
+        projects and transform visions into reality, I am ready to collaborate. Reach out, and let's build 
+        something exceptional together!
+    </p>
+
+    <hr class="my-4">
+
+    <h2 class="display-5 fw-bold mb-4">What I'm Doing</h2>
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="service-card p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <i class="bi bi-server fs-1 me-3 text-warning"></i>
+                    <h3 class="h5 fw-bold mb-0">Backend Development</h3>
+                </div>
+                <p class="text-muted mb-0">
+                    High-performance backend services designed
+                    for scalability and seamless user experience.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="service-card p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <i class="bi bi-code-slash fs-1 me-3 text-warning"></i>
+                    <h3 class="h5 fw-bold mb-0">Web Development</h3>
+                </div>
+                <p class="text-muted mb-0">Building responsive and user-friendly 
+                    websites with ASP.NET Core and modern web technologies.</p>
+            </div>
+        </div>
+    </div>
+
+    <hr class="my-4">
+
+    <h2 class="display-5 fw-bold mb-3">Skills</h2>
+
+    <div class="d-flex overflow-auto pb-3 pt-2 gap-4" style="scroll-behavior: smooth;">
+        <div class="skill-card text-center p-3 flex-shrink-0">
+            <img src="img/dotnet-logo.png" alt=".NET Logo" class="skill-icon-image mb-3">
+            <h4 class="h6 fw-bold mb-0">.NET</h4>
+        </div>
+        <div class="skill-card text-center p-3 flex-shrink-0">
+            <img src="img/blazor.svg" alt="Blazor Logo" class="skill-icon-image mb-4">
+            <h4 class="h6 fw-bold mb-0">Blazor</h4>
+        </div>
+        <div class="skill-card text-center p-3 flex-shrink-0">
+            <img src="img/csharp-logo.svg" alt="C# Logo" class="skill-icon-image mb-3">
+            <h4 class="h6 fw-bold mb-0">C#</h4>
+        </div>
+        <div class="skill-card text-center p-3 flex-shrink-0">
+            <img src="img/sql.png" alt="SQL Server Logo" class="skill-icon-image mb-3">
+            <h4 class="h6 fw-bold mb-0">SQL</h4>
+        </div>
+        <div class="skill-card text-center p-3 flex-shrink-0">
+            <img src="img/git-icon.svg" alt="Git Logo" class="skill-icon-image mb-3">
+            <h4 class="h6 fw-bold mb-0">Git</h4>
+        </div>
+        <div class="skill-card text-center p-3 flex-shrink-0">
+            <img src="img/azure.svg" alt="Azure Logo" class="skill-icon-image mb-3">
+            <h4 class="h6 fw-bold mb-0">Azure</h4>
+        </div>
+        @* <div class="skill-card text-center p-3 flex-shrink-0">
+            <img src="img/docker.svg" alt="Docker Logo" class="skill-icon-image mb-3">
+            <h4 class="h6 fw-bold mb-0">Docker</h4>
+        </div> *@
+        <div class="skill-card text-center p-3 flex-shrink-0">
+            <img src="img/c-logo.svg" alt="C LOGO" class="skill-icon-image mb-3">
+            <h4 class="h6 fw-bold mb-0">C</h4>
+        </div>
+        <div class="skill-card text-center p-3 flex-shrink-0">
+            <img src="img/cpp-logo.svg" alt="C++ Logo" class="skill-icon-image mb-3">
+            <h4 class="h6 fw-bold mb-0">C++</h4>
+        </div>
+        <div class="skill-card text-center p-3 flex-shrink-0">
+            <img src="img/html-5.svg" alt="HTML5 Logo" class="skill-icon-image mb-3">
+            <h4 class="h6 fw-bold mb-0">HTML5</h4>
+        </div>
+        <div class="skill-card text-center p-3 flex-shrink-0">
+            <img src="img/css-3.svg" alt="CSS3 Logo" class="skill-icon-image mb-3">
+            <h4 class="h6 fw-bold mb-0">CSS3</h4>
+        </div>
+
+    </div>
+</div>
+
+
+
+<style>
+    .service-card {
+        background: var(--bs-secondary-bg);
+        height: 176px;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2),
+                    0 2px 5px rgba(0,0,0,0.1);
+
+        transition: transform 0.2s ease-in-out;
+    }
+
+    .service-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .service-card h3 {
+        color: var(--bs-heading-color);
+    }
+
+    .service-card p {
+        color: var(--bs-body-color);
+        line-height: 1.6;
+    }
+
+    .skill-card {
+        border-radius: 12px;
+        width: 150px;
+        background: var(--bs-secondary-bg);
+        min-width: 150px;
+        height: 150px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2), 0 2px 5px rgba(0,0,0,0.1);
+        transition: transform 0.2s ease-in-out;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .skill-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .skill-icon-image {
+        max-width: 80px;
+        height: auto;
+        display: block;
+        margin: 0 auto 0.5rem;
+    }
+</style>

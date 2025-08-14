@@ -6,4 +6,4 @@ GET {{Api_HostAddress}}/auth/spotify/login
 
 
 ###
-GET {{Api_HostAddress}}/setlist/63ab8613
+GET https://localhost:7101/api/setlist/63ab8613

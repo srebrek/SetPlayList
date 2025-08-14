@@ -15,4 +15,8 @@
     <ProjectReference Include="..\SetPlayList.Core\SetPlayList.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="wwwroot\img\profile.jpg" />
+  </ItemGroup>
+
 </Project>
