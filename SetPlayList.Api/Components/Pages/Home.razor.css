@@ -1,0 +1,45 @@
+﻿.service-card {
+    background: var(--bs-secondary-bg);
+    height: 176px;
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: transform 0.2s ease-in-out;
+}
+
+    .service-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .service-card h3 {
+        color: var(--bs-heading-color);
+    }
+
+    .service-card p {
+        color: var(--bs-body-color);
+        line-height: 1.6;
+    }
+
+.skill-card {
+    border-radius: 12px;
+    width: 150px;
+    background: var(--bs-secondary-bg);
+    min-width: 150px;
+    height: 150px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2), 0 2px 5px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+    .skill-card:hover {
+        transform: translateY(-5px);
+    }
+
+.skill-icon-image {
+    max-width: 80px;
+    height: auto;
+    display: block;
+    margin: 0 auto 0.5rem;
+}

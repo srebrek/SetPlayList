@@ -13,16 +13,6 @@ body {
     background-color: #161B19;
 }
 
-.custom-panel {
-    background-color: var(--bs-body-bg);
-    border-radius: 24px;
-    border: 1px solid var(--bs-border-color);
-}
-
-.custom-panel {
-    scroll-behavior: smooth;
-}
-
 .fade-in {
     animation: fadeInAnimation ease 1s;
     animation-iteration-count: 1;

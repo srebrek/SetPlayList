@@ -10,9 +10,21 @@
     z-index: 1000;
 }
 
-    #blazor-error-ui .dismiss {
-        cursor: pointer;
-        position: absolute;
-        right: 0.75rem;
-        top: 0.5rem;
-    }
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}
+
+.custom-panel {
+    background-color: var(--bs-body-bg);
+    border-radius: var(--bs-border-radius-xl);
+    border: 1px solid var(--bs-border-color);
+    scroll-behavior: smooth;
+}
+
+aside .custom-panel {
+    top: 1.5rem;
+    max-height: calc(100vh - 3rem);
+}

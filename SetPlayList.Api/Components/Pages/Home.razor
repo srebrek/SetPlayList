@@ -2,20 +2,6 @@
 
 <PageTitle>Home</PageTitle>
 
-<nav class="navbar navbar-expand border-bottom"
-     style="--bs-nav-link-font-size: 1.2rem;">
-    <div class="container-fluid">
-        <ul class="navbar-nav me-auto">
-            <li class="nav-item">
-                <a class="nav-link active" aria-current="page" href="/">About</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="api/setlist/235eb897">Link</a>
-            </li>
-        </ul>
-    </div>
-</nav>
-
 <div class="fade-in">
     <h2 class=" my-3 display-5 fw-bold mb-4">About Me</h2>
     <p class="lead">
@@ -44,7 +30,7 @@
 
     <div class="row g-4">
         <div class="col-md-6">
-            <div class="service-card p-4">
+            <div class="service-card shadow p-4">
                 <div class="d-flex align-items-center mb-3">
                     <i class="bi bi-server fs-1 me-3 text-warning"></i>
                     <h3 class="h5 fw-bold mb-0">Backend Development</h3>
@@ -57,7 +43,7 @@
         </div>
 
         <div class="col-md-6">
-            <div class="service-card p-4">
+            <div class="service-card shadow p-4">
                 <div class="d-flex align-items-center mb-3">
                     <i class="bi bi-code-slash fs-1 me-3 text-warning"></i>
                     <h3 class="h5 fw-bold mb-0">Web Development</h3>
@@ -121,55 +107,6 @@
     </div>
 </div>
 
+@code{
 
-
-<style>
-    .service-card {
-        background: var(--bs-secondary-bg);
-        height: 176px;
-        border-radius: 12px;
-        padding: 1.5rem;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.2),
-                    0 2px 5px rgba(0,0,0,0.1);
-
-        transition: transform 0.2s ease-in-out;
-    }
-
-    .service-card:hover {
-        transform: translateY(-5px);
-    }
-
-    .service-card h3 {
-        color: var(--bs-heading-color);
-    }
-
-    .service-card p {
-        color: var(--bs-body-color);
-        line-height: 1.6;
-    }
-
-    .skill-card {
-        border-radius: 12px;
-        width: 150px;
-        background: var(--bs-secondary-bg);
-        min-width: 150px;
-        height: 150px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.2), 0 2px 5px rgba(0,0,0,0.1);
-        transition: transform 0.2s ease-in-out;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .skill-card:hover {
-        transform: translateY(-5px);
-    }
-
-    .skill-icon-image {
-        max-width: 80px;
-        height: auto;
-        display: block;
-        margin: 0 auto 0.5rem;
-    }
-</style>
+}
