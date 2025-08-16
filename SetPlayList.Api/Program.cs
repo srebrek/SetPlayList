@@ -55,6 +55,7 @@ app.MapGet("api/playlist-preview/{setlistId}", async (ISpotifyPlaylistService sp
     return result.ProposedPlaylist;
 });
 
-app.MapRazorComponents<App>();
+app.MapRazorComponents<App>()
+    .AddInteractiveServerRenderMode();
 
 app.Run();
