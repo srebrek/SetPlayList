@@ -9,7 +9,7 @@ public class SpotifyAuthService(ISpotifyApiClient spotifyApiClient, ILogger<Spot
     private readonly ILogger<SpotifyAuthService> _logger = logger;
     private readonly string _stateCookieName = "spotify_auth_state";
     private readonly string _tokenCookieName = "spotify_token";
-    private readonly int _cookieExpirationTime = 10; // Minute
+    private readonly int _cookieExpirationTime = 5; // Minute
 
     public string GetAuthorizationUrl(HttpContext context)
     {

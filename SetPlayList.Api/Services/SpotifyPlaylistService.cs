@@ -1,5 +1,4 @@
-﻿using SetPlayList.Core.DTOs.SetlistFm;
-using SetPlayList.Core.DTOs.Spotify;
+﻿using SetPlayList.Core.DTOs.Spotify;
 using SetPlayList.Core.Interfaces;
 using SetPlayList.Core.Models;
 using System.Net;
@@ -49,8 +48,8 @@ public class SpotifyPlaylistService(
                     throw new NotImplementedException();
                 }
 
-                proposedTracks.Add(new ProposedTrack(song, new(), null));
-                tasks.Add(_spotifyApiClient.SearchTopTracksAsync(artistName, songName, _previewTrackCount, accessToken));
+                proposedTracks.Add(new ProposedTrack(new Song(song.Name, song.With?.Name, song.Cover?.Name, song.Tape), new(), null));
+                tasks.Add(_spotifyApiClient.SearchTopTracksAsync(song.Cover?.Name ?? artistName, songName, _previewTrackCount, accessToken));
             }
         }
 
@@ -71,13 +70,18 @@ public class SpotifyPlaylistService(
                     track.Album.Name,
                     track.Album.Images.First().Url));
             }
+            proposedTrack.SelectedTrack = proposedTrack.SpotifyOptions.FirstOrDefault();
         }
 
         return (proposedPlaylist, HttpStatusCode.OK);
     }
 
-    public Task<string?> CreatePlaylistOnSpotifyAsync(ProposedPlaylist finalPlaylist)
+    public async Task CreatePlaylistOnSpotifyAsync(ProposedPlaylist finalPlaylist, string accessToken)
     {
-        throw new NotImplementedException();
+        HttpStatusCode httpStatusCode;
+        (var userId, httpStatusCode) = await _spotifyApiClient.GetCurrentUserIdAsync(accessToken);
+        (var playlistId, httpStatusCode) = await _spotifyApiClient.CreatePlaylistAsync(userId, finalPlaylist.Name, accessToken);
+        var trackIds = finalPlaylist.Tracks.Select(track => track.SelectedTrackId).ToList();
+        httpStatusCode = await _spotifyApiClient.AddTracksToPlaylistAsync(playlistId, trackIds, accessToken);
     }
 }

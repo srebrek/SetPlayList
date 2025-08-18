@@ -6,5 +6,5 @@ namespace SetPlayList.Core.Interfaces;
 public interface ISpotifyPlaylistService
 {
     Task<(ProposedPlaylist ProposedPlaylist, HttpStatusCode httpStatusCode)> GeneratePreviewAsync(string setlistUrl, string accessToken);
-    Task<string?> CreatePlaylistOnSpotifyAsync(ProposedPlaylist finalPlaylist);
+    Task CreatePlaylistOnSpotifyAsync(ProposedPlaylist finalPlaylist, string accessToken);
 }

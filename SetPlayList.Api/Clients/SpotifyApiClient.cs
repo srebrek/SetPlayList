@@ -139,4 +139,179 @@ public class SpotifyApiClient(
             return (null, HttpStatusCode.InternalServerError);
         }
     }
+
+    public async Task<(string? userId, HttpStatusCode httpStatusCode)> GetCurrentUserIdAsync(string accessToken)
+    {
+        var url = $"https://api.spotify.com/v1/me";
+
+        var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.Authorization = new("Bearer", accessToken);
+
+        try
+        {
+            var response = await _httpClient.SendAsync(request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogError("Spotify get current user error. Status: {StatusCode}. Response: {ErrorResponse}",
+                    response.StatusCode, errorContent);
+                return (null, HttpStatusCode.BadGateway);
+            }
+
+            try
+            {
+                var searchResponse = await response.Content.ReadFromJsonAsync<UserResponse>(_jsonSerializerOptions);
+                var debugString = await response.Content.ReadAsStringAsync();
+                if (searchResponse is null)
+                {
+                    throw new NotImplementedException();
+                }
+
+                return (searchResponse.Id, HttpStatusCode.OK);
+            }
+            catch (JsonException ex)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync();
+                _logger.LogError(ex, "{ResponseContent}", responseContent);
+                return (null, HttpStatusCode.BadGateway);
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "");
+            return (null, HttpStatusCode.BadGateway);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "");
+            return (null, HttpStatusCode.InternalServerError);
+        }
+    }
+
+    public async Task<(string? playlistId, HttpStatusCode httpStatusCode)> CreatePlaylistAsync(string userId, string playlistName, string accessToken)
+    {
+        var url = $"https://api.spotify.com/v1/users/{userId}/playlists";
+        var playlistCreationData = new
+        {
+            name = playlistName
+        };
+
+        var request = new HttpRequestMessage(HttpMethod.Post, url);
+        request.Headers.Authorization = new("Bearer", accessToken);
+        request.Content = JsonContent.Create(playlistCreationData, null, _jsonSerializerOptions);
+
+        try
+        {
+            var response = await _httpClient.SendAsync(request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogError("Spotify create playlist error. Status: {StatusCode}. Response: {ErrorResponse}",
+                    response.StatusCode, errorContent);
+                return (null, HttpStatusCode.BadGateway);
+            }
+
+            try
+            {
+                var searchResponse = await response.Content.ReadFromJsonAsync<CreatePlaylistResponse>(_jsonSerializerOptions);
+                var debugString = await response.Content.ReadAsStringAsync();
+                if (searchResponse is null)
+                {
+                    throw new NotImplementedException();
+                }
+                return (searchResponse.Id, HttpStatusCode.OK);
+            }
+            catch (JsonException ex)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync();
+                _logger.LogError(ex, "{ResponseContent}", responseContent);
+                return (null, HttpStatusCode.BadGateway);
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "");
+            return (null, HttpStatusCode.BadGateway);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "");
+            return (null, HttpStatusCode.InternalServerError);
+        }
+    }
+
+    public async Task<HttpStatusCode> AddTracksToPlaylistAsync(string playlistId, List<string> trackIds, string accessToken)
+    {
+        var url = $"https://api.spotify.com/v1/playlists/{playlistId}/tracks";
+        var urisToAdd = new List<string>();
+
+        foreach (var id in trackIds)
+        {
+            if (id is not null)
+            {
+                urisToAdd.Add($"spotify:track:{id}");
+
+            }
+        }
+
+        if (!urisToAdd.Any())
+        {
+            throw new NotImplementedException();
+        }
+
+        var tracksAddingData = new
+        {
+            uris = urisToAdd
+        };
+
+
+        var request = new HttpRequestMessage(HttpMethod.Post, url);
+        request.Headers.Authorization = new("Bearer", accessToken);
+        request.Content = JsonContent.Create(tracksAddingData, null, _jsonSerializerOptions);
+
+        try
+        {
+            var response = await _httpClient.SendAsync(request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogError("Spotify add tracks error. Status: {StatusCode}. Response: {ErrorResponse}",
+                    response.StatusCode, errorContent);
+                return HttpStatusCode.BadGateway;
+            }
+
+            try
+            {
+                var searchResponse = await response.Content.ReadFromJsonAsync<CreatePlaylistResponse>(_jsonSerializerOptions);
+                var debugString = await response.Content.ReadAsStringAsync();
+                if (searchResponse is null)
+                {
+                    throw new NotImplementedException();
+                }
+                return HttpStatusCode.OK;
+            }
+            catch (JsonException ex)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync();
+                _logger.LogError(ex, "{ResponseContent}", responseContent);
+                return HttpStatusCode.BadGateway;
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "");
+            return HttpStatusCode.BadGateway;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "");
+            return HttpStatusCode.InternalServerError;
+        }
+    }
 }
+
+public record UserResponse(string DisplayName, string Id);
+public record CreatePlaylistResponse(string Id);

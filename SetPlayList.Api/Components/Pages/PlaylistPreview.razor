@@ -1,48 +1,150 @@
 ﻿@page "/playlist-preview/{SetlistId}"
-@using SetPlayList.Core.Interfaces
+@* @attribute [StreamRendering()]
+ *@@using SetPlayList.Core.Interfaces
 @using SetPlayList.Core.Models
+
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+@* http://localhost:5004/playlist-preview/235eb897 *@
+@* http://localhost:5004/auth/spotify/login *@
 
 @inject ISpotifyPlaylistService PlaylistService
 @inject ISpotifyAuthService AuthService
 @inject IHttpContextAccessor HttpContextAccessor
 
-<h3>Podgląd playlisty</h3>
+<PageTitle>SetPlayList</PageTitle>
+
 
 @if (playlistPreview is not null)
 {
-    <h4>@playlistPreview.Name</h4>
-    <ul>
-        @foreach (var track in playlistPreview.Tracks)
-        {
-            <li>@track.OriginalSong.Name</li>
-        }
-    </ul>
+    <section class="fade-in">
+        <div class="px-md-3">
+            <h2 class=" my-3 display-5 fw-bold mb-4">Playlist Preview</h2>
+
+            <EditForm Model="@playlistPreview" OnSubmit="HandleSubmit">
+            
+                <div class="mb-3">
+                    <label for="nameInput" class="form-label">Playlist Name</label>
+                    <InputText type="text" class="form-control" id="nameInput" @bind-Value="playlistPreview.Name"/>
+                </div>
+
+                @for (var i = 0; i < playlistPreview.Tracks.Count; i++)
+                {
+                    var index = i;
+                    var trackProposal = playlistPreview.Tracks[index];
+                    <hr />
+
+                    <div class="d-flex flex-column align-items-center mb-2">
+                        <div>
+                            @if (trackProposal.OriginalSong.IsTape)
+                            {
+                                <i class="bi bi-cassette-fill me-3"></i>
+                            }
+                            <strong>@trackProposal.OriginalSong.Name</strong>
+                        </div>
+                        @if (trackProposal.OriginalSong.With is not null)
+                        {
+                            <div class="ms-md-3"><em>with: @trackProposal.OriginalSong.With</em></div>
+                        }
+                        @if (trackProposal.OriginalSong.OriginalArtist is not null)
+                        {
+                            <div class="ms-md-3"><em>cover: @trackProposal.OriginalSong.OriginalArtist</em></div>
+                        }
+                    </div>
+
+                    <div class="d-flex justify-content-around gap-2 overflow-auto">
+                        <InputRadioGroup Name="@(index.ToString())" @bind-Value="trackProposal.SelectedTrackId">
+                            @foreach (var spotifyOption in trackProposal.SpotifyOptions)
+                            {
+                                <label for="@($"radio-{spotifyOption.Id}")">
+                                    <div class="card shadow" style="width: 12rem; background-color: var(--bs-secondary-bg);">
+                                        <img src="@spotifyOption.AlbumImageUrl" class="card-img-top" alt="album image">
+                                        <div class="card-body vstack">
+                                            <h6>@spotifyOption.Name</h6>
+                                            <p>@spotifyOption.AlbumName</p>
+                                            <p><em>@spotifyOption.Artists.Aggregate((partialPhrase, word) => $"{partialPhrase} {word}")</em></p>
+                                            <InputRadio id="@($"radio-{spotifyOption.Id}")"
+                                                        Value="@spotifyOption.Id"
+                                                        class="form-check-input form-check-input-warning" />
+                                        </div>
+                                        
+                                    </div>
+                                </label>
+                            }
+                        </InputRadioGroup>
+                    </div>
+                }
+
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </EditForm>
+        </div>
+    </section>
 }
 else
 {
-    <p>Ładowanie podglądu...</p>
+    <div class="fade-in">
+        <h2 class=" my-3 display-5 fw-bold mb-4">Playlist Preview</h2>
+
+        <p>Ładowanie podglądu...</p>
+    </div>
 }
+
+
 
 @code {
     [Parameter]
     public string? SetlistId { get; set; }
 
-    private ProposedPlaylist? playlistPreview;
+    private ProposedPlaylist? playlistPreview { get; set; }
+
+    private string? AccessToken;
 
     protected override async Task OnInitializedAsync()
     {
         var httpContext = HttpContextAccessor.HttpContext;
-        if (httpContext is null)
+        if (httpContext is null || playlistPreview is not null)
         {
             return;
         }
 
-        var accessToken = await AuthService.GetCurrentAccessTokenAsync(httpContext);
-        if (string.IsNullOrEmpty(accessToken))
+        AccessToken = await AuthService.GetCurrentAccessTokenAsync(httpContext);
+        if (string.IsNullOrEmpty(AccessToken))
         {
             return;
         }
 
-        (playlistPreview, var httpStatusCode) = await PlaylistService.GeneratePreviewAsync(SetlistId!, accessToken);
+        (playlistPreview, var httpStatusCode) = await PlaylistService.GeneratePreviewAsync(SetlistId!, AccessToken);
+    }
+
+    private async Task HandleSubmit()
+    {
+        foreach (var track in playlistPreview!.Tracks)
+        {
+            if (track.SelectedTrack != null)
+            {
+                Console.WriteLine($" - Dla '{track.OriginalSong?.Name}' wybrano: '{track.SelectedTrack.Name}' (ID: {track.SelectedTrack.Id})");
+            }
+            else
+            {
+                Console.WriteLine($" - Dla '{track.OriginalSong?.Name}' nic nie wybrano.");
+            }
+        }
+
+        await PlaylistService.CreatePlaylistOnSpotifyAsync(playlistPreview, AccessToken);
     }
 }
+
+<style>
+    .form-check-input-warning {
+    }
+
+        .form-check-input-warning:checked {
+            background-color: var(--bs-warning);
+            border-color: var(--bs-warning);
+        }
+
+        .form-check-input-warning:focus {
+            border-color: var(--bs-warning);
+            box-shadow: 0 0 0 0.25rem rgba(var(--bs-warning-rgb), .25);
+        }
+</style>
