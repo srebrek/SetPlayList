@@ -1,4 +1,4 @@
-﻿@page "/playlist-preview/{SetlistId}"
+﻿@page "/setplaylist/preview/{SetlistId}"
 @* @attribute [StreamRendering()]
  *@@using SetPlayList.Core.Interfaces
 @using SetPlayList.Core.Models
@@ -11,13 +11,14 @@
 @inject ISpotifyPlaylistService PlaylistService
 @inject ISpotifyAuthService AuthService
 @inject IHttpContextAccessor HttpContextAccessor
+@inject NavigationManager NavigationManager
 
 <PageTitle>SetPlayList</PageTitle>
 
 
 @if (playlistPreview is not null)
 {
-    <section class="fade-in">
+    <article class="fade-in">
         <div class="px-md-3">
             <h2 class=" my-3 display-5 fw-bold mb-4">Playlist Preview</h2>
 
@@ -74,20 +75,42 @@
                         </InputRadioGroup>
                     </div>
                 }
-
-                <button type="submit" class="btn btn-primary">Submit</button>
+                <div class="text-center my-3">
+                    @if (playlistSaved)
+                    {
+                        <h3>Playlist saved on your Spotify profile.</h3>
+                    }
+                    else
+                    {
+                        <button type="submit" class="btn btn-warning">Submit</button>
+                    }
+                </div>
             </EditForm>
         </div>
-    </section>
+    </article>
+}
+else if (loginUrl is not null)
+{
+    <article class="fade-in">
+        <h2 class=" my-3 display-5 fw-bold mb-4">Playlist Preview</h2>
+        <p>
+            <a href="@loginUrl" class="link-warning link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">You have to be logged in to Spotify first...</a>
+        </p>
+
+    </article>
 }
 else
 {
-    <div class="fade-in">
+    <article class="fade-in">
         <h2 class=" my-3 display-5 fw-bold mb-4">Playlist Preview</h2>
 
-        <p>Ładowanie podglądu...</p>
-    </div>
+        <div class="spinner-border text-warning justify-center" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </article>
 }
+
+
 
 
 
@@ -98,6 +121,10 @@ else
     private ProposedPlaylist? playlistPreview { get; set; }
 
     private string? AccessToken;
+
+    private string? loginUrl;
+
+    private bool playlistSaved;
 
     protected override async Task OnInitializedAsync()
     {
@@ -110,6 +137,7 @@ else
         AccessToken = await AuthService.GetCurrentAccessTokenAsync(httpContext);
         if (string.IsNullOrEmpty(AccessToken))
         {
+            loginUrl = "/auth/spotify/login";
             return;
         }
 
@@ -131,6 +159,8 @@ else
         }
 
         await PlaylistService.CreatePlaylistOnSpotifyAsync(playlistPreview, AccessToken);
+
+        playlistSaved = true;
     }
 }
 

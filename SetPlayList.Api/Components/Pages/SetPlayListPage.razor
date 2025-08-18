@@ -1,0 +1,107 @@
+﻿@page "/setplaylist"
+
+@using System.ComponentModel.DataAnnotations
+@using System.Text.RegularExpressions
+
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+@inject NavigationManager NavManager
+
+<PageTitle>SetPlayList</PageTitle>
+
+<section class="fade-in">
+    <div class="px-md-3">
+        <h2 class=" my-3 display-5 fw-bold mb-4">SetPlayList</h2>
+        <p class="lead">
+            An online tool to quickly save concert setlist from
+            <a href="https://www.setlist.fm/" class="link-warning link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">setlist.fm</a>
+            as a playlist on Spotify.
+        </p>
+        <p>
+            Simply paste a setlist link from
+            <a href="https://www.setlist.fm/" class="link-warning link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">setlist.fm</a>:
+        </p>
+
+        <EditForm Model="@_linkModel" OnValidSubmit="HandleValidSubmit" OnInvalidSubmit="HandleInvalidSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-group mb-3">
+                <label for="linkInput">Enter Url:</label>
+                <InputText id="linkInput" class="form-control" @bind-Value="_linkModel.Link" placeholder="eg. https://www.setlist.fm/setlist/rammstein/2022/pge-narodowy-warsaw-poland-33b2b0fd.html" />
+                <ValidationMessage For="@(() => _linkModel.Link)" class="text-danger" />
+            </div>
+
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <div class="alert alert-danger mt-3">
+                    @_errorMessage
+                </div>
+            }
+
+            <button type="submit" class="btn btn-warning mt-3">Confirm</button>
+        </EditForm>
+
+    </div>
+</section>
+
+@code {
+    private LinkModel? _linkModel { get; set; }
+    private string _errorMessage = string.Empty;
+
+    public class LinkModel
+    {
+        [Required(ErrorMessage = "Url is required.")]
+        [Url(ErrorMessage = "Paste valid Url (eg. https://www.setlist.fm/setlist/rammstein/2022/pge-narodowy-warsaw-poland-33b2b0fd.html).")]
+        public string Link { get; set; } = string.Empty;
+    }
+
+    protected override void OnInitialized()
+    {
+        if (_linkModel is null)
+        {
+            _linkModel = new();
+        }
+    }
+
+    private void HandleValidSubmit()
+    {
+        _errorMessage = string.Empty;
+
+        try
+        {
+            var uri = new Uri(_linkModel.Link);
+            string? extractedCode = null;
+
+            var regex = new Regex(@"-([a-f0-9]{8})\.html$", RegexOptions.IgnoreCase);
+            var match = regex.Match(uri.AbsolutePath);
+            if (match.Success && match.Groups.Count > 1)
+            {
+                extractedCode = match.Groups[1].Value;
+            }
+
+            if (string.IsNullOrEmpty(extractedCode))
+            {
+                _errorMessage = "Nie udało się wyodrębnić kodu z podanego linku. Sprawdź format linku (np. oczekiwano '/produkt/KOD' lub '?kod=KOD').";
+                return;
+            }
+
+            string targetUrl = $"/setplaylist/preview/{extractedCode}";
+            NavManager.NavigateTo(targetUrl, forceLoad: true);
+        }
+        catch (UriFormatException)
+        {
+            _errorMessage = "Wprowadzony tekst nie jest poprawnym formatem URL.";
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Wystąpił nieoczekiwany błąd podczas przetwarzania linku: {ex.Message}";
+            Console.WriteLine($"Błąd: {ex}");
+        }
+    }
+
+    private void HandleInvalidSubmit()
+    {
+        _errorMessage = "Formularz zawiera błędy walidacji. Popraw dane.";
+    }
+}

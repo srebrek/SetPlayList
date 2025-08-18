@@ -38,7 +38,8 @@ app.MapGet("/auth/spotify/callback", async (HttpContext context, ISpotifyAuthSer
 
     var success = await spotifyAuthService.HandleAuthorizationCallbackAsync(context, code, state);
 
-    return success ? Results.Ok("Token saved.") : Results.Problem("Failed to exchange code for token.");
+    //return success ? Results.Ok("Token saved.") : Results.Problem("Failed to exchange code for token.");
+    return success ? Results.Redirect("/setplaylist") : Results.Problem("Failed to exchange code for token.");
 });
 
 app.MapGet("api/setlist/{setlistId}", async (ISetlistFmApiClient setlistFmApiClient, string setlistId) =>
