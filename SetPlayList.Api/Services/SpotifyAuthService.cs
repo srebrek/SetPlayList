@@ -9,7 +9,8 @@ public class SpotifyAuthService(ISpotifyApiClient spotifyApiClient, ILogger<Spot
     private readonly ILogger<SpotifyAuthService> _logger = logger;
     private readonly string _stateCookieName = "spotify_auth_state";
     private readonly string _tokenCookieName = "spotify_token";
-    private readonly int _cookieExpirationTime = 5; // Minute
+    private readonly int _stateCookieExpirationTime = 5; // Minute
+    private readonly int _accessTokenCookieExpirationTime = 30; // Minute
 
     public string GetAuthorizationUrl(HttpContext context)
     {
@@ -18,7 +19,7 @@ public class SpotifyAuthService(ISpotifyApiClient spotifyApiClient, ILogger<Spot
         {
             HttpOnly = true,
             Secure = true,
-            Expires = DateTimeOffset.UtcNow.AddMinutes(_cookieExpirationTime)
+            Expires = DateTimeOffset.UtcNow.AddMinutes(_stateCookieExpirationTime)
         };
         context.Response.Cookies.Append(_stateCookieName, state, cookieOptions);
 
@@ -55,6 +56,7 @@ public class SpotifyAuthService(ISpotifyApiClient spotifyApiClient, ILogger<Spot
             HttpOnly = true,
             Secure = true,
             SameSite = SameSiteMode.Lax,
+            Expires = DateTimeOffset.UtcNow.AddMinutes(_stateCookieExpirationTime)
         };
         context.Response.Cookies.Append(_tokenCookieName, authToken.AccessToken, cookieOptions);
 

@@ -1,12 +1,9 @@
 ﻿@page "/setplaylist/preview/{SetlistId}"
-@* @attribute [StreamRendering()]
- *@@using SetPlayList.Core.Interfaces
+@attribute [StreamRendering()]
+@using SetPlayList.Core.Interfaces
 @using SetPlayList.Core.Models
-
-@rendermode @(new InteractiveServerRenderMode(prerender: false))
-
-@* http://localhost:5004/playlist-preview/235eb897 *@
-@* http://localhost:5004/auth/spotify/login *@
+@using System.ComponentModel.DataAnnotations
+@using SetPlayList.Api.Support;
 
 @inject ISpotifyPlaylistService PlaylistService
 @inject ISpotifyAuthService AuthService
@@ -16,17 +13,19 @@
 <PageTitle>SetPlayList</PageTitle>
 
 
-@if (playlistPreview is not null)
+@if (playlistPreview is not null && formModel is not null && !playlistSaved)
 {
     <article class="fade-in">
         <div class="px-md-3">
             <h2 class=" my-3 display-5 fw-bold mb-4">Playlist Preview</h2>
 
-            <EditForm Model="@playlistPreview" OnSubmit="HandleSubmit">
+            <EditForm EditContext="@editContext" FormName="PlaylistForm" OnValidSubmit="HandleValidSubmit" OnInvalidSubmit="HandleInvalidSubmit">
+                <DataAnnotationsValidator />
             
                 <div class="mb-3">
                     <label for="nameInput" class="form-label">Playlist Name</label>
-                    <InputText type="text" class="form-control" id="nameInput" @bind-Value="playlistPreview.Name"/>
+                    <InputText type="text" class="form-control" id="nameInput" @bind-Value="formModel.PlaylistName"/>
+                    <ValidationMessage For="() => formModel.PlaylistName" />
                 </div>
 
                 @for (var i = 0; i < playlistPreview.Tracks.Count; i++)
@@ -54,18 +53,22 @@
                     </div>
 
                     <div class="d-flex justify-content-around gap-2 overflow-auto">
-                        <InputRadioGroup Name="@(index.ToString())" @bind-Value="trackProposal.SelectedTrackId">
-                            @foreach (var spotifyOption in trackProposal.SpotifyOptions)
+                        <InputRadioGroup Name="@($"formModel.{nameof(formModel.TrackSelections)}[{index}]")" @bind-Value="formModel.TrackSelections[index]">
+                            @for (var j = 0; j < playlistPreview.Tracks[index].SpotifyOptions.Count; j++)
                             {
-                                <label for="@($"radio-{spotifyOption.Id}")">
+                                var jdex = j;
+                                var spotifyOption = playlistPreview.Tracks[index].SpotifyOptions[j];
+                                var sId = spotifyOption.Id;
+
+                                <label for="@($"radio-{jdex}-{index}")">
                                     <div class="card shadow" style="width: 12rem; background-color: var(--bs-secondary-bg);">
                                         <img src="@spotifyOption.AlbumImageUrl" class="card-img-top" alt="album image">
                                         <div class="card-body vstack">
                                             <h6>@spotifyOption.Name</h6>
                                             <p>@spotifyOption.AlbumName</p>
-                                            <p><em>@spotifyOption.Artists.Aggregate((partialPhrase, word) => $"{partialPhrase} {word}")</em></p>
-                                            <InputRadio id="@($"radio-{spotifyOption.Id}")"
-                                                        Value="@spotifyOption.Id"
+                                            <p><em>@string.Join(", ", spotifyOption.Artists)</em></p>
+                                            <InputRadio id="@($"radio-{jdex}-{index}")"
+                                                        Value="@sId"
                                                         class="form-check-input form-check-input-warning" />
                                         </div>
                                         
@@ -76,14 +79,7 @@
                     </div>
                 }
                 <div class="text-center my-3">
-                    @if (playlistSaved)
-                    {
-                        <h3>Playlist saved on your Spotify profile.</h3>
-                    }
-                    else
-                    {
-                        <button type="submit" class="btn btn-warning">Submit</button>
-                    }
+                    <button type="submit" class="btn btn-warning">Submit</button>
                 </div>
             </EditForm>
         </div>
@@ -97,6 +93,15 @@ else if (loginUrl is not null)
             <a href="@loginUrl" class="link-warning link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">You have to be logged in to Spotify first...</a>
         </p>
 
+    </article>
+}
+else if (playlistSaved)
+{
+    <article class="fade-in">
+        <h2 class=" my-3 display-5 fw-bold mb-4">Playlist Preview</h2>
+        <div class="alert alert-warning" role="alert">
+            Playlist "<strong>@formModel.PlaylistName</strong>" saved on your Spotify profile.
+        </div>
     </article>
 }
 else
@@ -120,16 +125,24 @@ else
 
     private ProposedPlaylist? playlistPreview { get; set; }
 
+    [SupplyParameterFromForm]
+    private PlaylistFormModel? formModel { get; set; }
+
     private string? AccessToken;
 
     private string? loginUrl;
 
     private bool playlistSaved;
 
+    private EditContext? editContext;
+
+    private bool invalidSubmit;
+    private bool loggedIn;
+
     protected override async Task OnInitializedAsync()
     {
         var httpContext = HttpContextAccessor.HttpContext;
-        if (httpContext is null || playlistPreview is not null)
+        if (httpContext is null)
         {
             return;
         }
@@ -138,29 +151,53 @@ else
         if (string.IsNullOrEmpty(AccessToken))
         {
             loginUrl = "/auth/spotify/login";
+            loggedIn = false;
             return;
         }
 
         (playlistPreview, var httpStatusCode) = await PlaylistService.GeneratePreviewAsync(SetlistId!, AccessToken);
-    }
 
-    private async Task HandleSubmit()
-    {
-        foreach (var track in playlistPreview!.Tracks)
+        if (formModel is not null)
         {
-            if (track.SelectedTrack != null)
+            playlistPreview.Name = formModel.PlaylistName;
+            for (int i = 0; i < playlistPreview.Tracks.Count; i++)
             {
-                Console.WriteLine($" - Dla '{track.OriginalSong?.Name}' wybrano: '{track.SelectedTrack.Name}' (ID: {track.SelectedTrack.Id})");
-            }
-            else
-            {
-                Console.WriteLine($" - Dla '{track.OriginalSong?.Name}' nic nie wybrano.");
+                playlistPreview.Tracks[i].SelectedTrackId = formModel.TrackSelections[i];
             }
         }
+        else
+        {
+            formModel = new();
+            formModel.PlaylistName = playlistPreview.Name;
+            for (int i = 0; i < playlistPreview.Tracks.Count; i++)
+            {
+                formModel.TrackSelections.Add(playlistPreview.Tracks[i].SpotifyOptions.FirstOrDefault()?.Id);
+            }
+        }
+        editContext = new(formModel);
+        editContext.SetFieldCssClassProvider(new BootstrapFieldCssClassProvider());
+    }
 
+    private async Task HandleValidSubmit()
+    {
         await PlaylistService.CreatePlaylistOnSpotifyAsync(playlistPreview, AccessToken);
 
         playlistSaved = true;
+    }
+
+    private Task HandleInvalidSubmit()
+    {
+        invalidSubmit = true;
+        return Task.CompletedTask;
+    }
+
+    public class PlaylistFormModel
+    {
+        [Required(ErrorMessage = "Name is required.")]
+        [StringLength(255)]
+        public string? PlaylistName { get; set; }
+
+        public List<string> TrackSelections { get; set; } = new();
     }
 }
 
@@ -177,4 +214,8 @@ else
             border-color: var(--bs-warning);
             box-shadow: 0 0 0 0.25rem rgba(var(--bs-warning-rgb), .25);
         }
+
+    .validation-message {
+        color: var(--bs-form-invalid-color);
+    }
 </style>

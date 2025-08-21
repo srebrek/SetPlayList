@@ -34,8 +34,18 @@ public class SpotifyPlaylistService(
 
         List<ProposedTrack> proposedTracks = new();
         ProposedPlaylist proposedPlaylist = new(
-            "temporary name",
+            string.Empty,
             proposedTracks);
+
+        var dateString = setlist.EventDate;
+        _ = DateOnly.TryParse(dateString, out var date);
+        List<string?> titleParts = [
+            artistName,
+            setlist.Venue.City.Name,
+            date.Year.ToString()
+        ];
+        var suggestedName = string.Join(" - ", titleParts.Where(part => !string.IsNullOrEmpty(part)));
+        proposedPlaylist.Name = suggestedName;
 
         List<Task<(List<Track>? tracks, HttpStatusCode httpStatusCode)>> tasks = new();
         foreach (var set in setlist.Sets.Set)
@@ -70,7 +80,6 @@ public class SpotifyPlaylistService(
                     track.Album.Name,
                     track.Album.Images.First().Url));
             }
-            proposedTrack.SelectedTrack = proposedTrack.SpotifyOptions.FirstOrDefault();
         }
 
         return (proposedPlaylist, HttpStatusCode.OK);

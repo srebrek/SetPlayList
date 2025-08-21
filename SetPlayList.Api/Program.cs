@@ -3,7 +3,6 @@ using SetPlayList.Api.Configuration;
 using SetPlayList.Api.Services;
 using SetPlayList.Core.Interfaces;
 using SetPlayList.Api.Components;
-using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,8 +14,7 @@ builder.Services.AddScoped<ISetlistFmApiClient, SetlistFmApiClient>();
 builder.Services.AddScoped<ISpotifyPlaylistService, SpotifyPlaylistService>();
 builder.Services.AddHttpContextAccessor();
 
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+builder.Services.AddRazorComponents();
 
 var app = builder.Build();
 
@@ -56,7 +54,6 @@ app.MapGet("api/playlist-preview/{setlistId}", async (ISpotifyPlaylistService sp
     return result.ProposedPlaylist;
 });
 
-app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
+app.MapRazorComponents<App>();
 
 app.Run();

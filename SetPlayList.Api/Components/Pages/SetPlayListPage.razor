@@ -2,8 +2,7 @@
 
 @using System.ComponentModel.DataAnnotations
 @using System.Text.RegularExpressions
-
-@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@using SetPlayList.Api.Support;
 
 @inject NavigationManager NavManager
 
@@ -22,14 +21,15 @@
             <a href="https://www.setlist.fm/" class="link-warning link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">setlist.fm</a>:
         </p>
 
-        <EditForm Model="@_linkModel" OnValidSubmit="HandleValidSubmit" OnInvalidSubmit="HandleInvalidSubmit">
+        <EditForm EditContext="@editContext" FormName="linkForm" OnValidSubmit="HandleValidSubmit">
             <DataAnnotationsValidator />
-            <ValidationSummary />
 
             <div class="form-group mb-3">
                 <label for="linkInput">Enter Url:</label>
                 <InputText id="linkInput" class="form-control" @bind-Value="_linkModel.Link" placeholder="eg. https://www.setlist.fm/setlist/rammstein/2022/pge-narodowy-warsaw-poland-33b2b0fd.html" />
-                <ValidationMessage For="@(() => _linkModel.Link)" class="text-danger" />
+                <div class="invalid-feedback d-block">
+                    <ValidationMessage For="@(() => _linkModel.Link)" />
+                </div>
             </div>
 
             @if (!string.IsNullOrEmpty(_errorMessage))
@@ -46,8 +46,10 @@
 </section>
 
 @code {
+    [SupplyParameterFromForm]
     private LinkModel? _linkModel { get; set; }
     private string _errorMessage = string.Empty;
+    private EditContext? editContext;
 
     public class LinkModel
     {
@@ -62,46 +64,37 @@
         {
             _linkModel = new();
         }
+        editContext = new(_linkModel);
+        editContext.SetFieldCssClassProvider(new BootstrapFieldCssClassProvider());
     }
 
-    private void HandleValidSubmit()
+    private async Task HandleValidSubmit()
     {
         _errorMessage = string.Empty;
 
-        try
+        var uri = new Uri(_linkModel.Link);
+        string? extractedCode = null;
+
+        var regex = new Regex(@"-([a-f0-9]{8})\.html$", RegexOptions.IgnoreCase);
+        var match = regex.Match(uri.AbsolutePath);
+        if (match.Success && match.Groups.Count > 1)
         {
-            var uri = new Uri(_linkModel.Link);
-            string? extractedCode = null;
-
-            var regex = new Regex(@"-([a-f0-9]{8})\.html$", RegexOptions.IgnoreCase);
-            var match = regex.Match(uri.AbsolutePath);
-            if (match.Success && match.Groups.Count > 1)
-            {
-                extractedCode = match.Groups[1].Value;
-            }
-
-            if (string.IsNullOrEmpty(extractedCode))
-            {
-                _errorMessage = "Nie udało się wyodrębnić kodu z podanego linku. Sprawdź format linku (np. oczekiwano '/produkt/KOD' lub '?kod=KOD').";
-                return;
-            }
-
-            string targetUrl = $"/setplaylist/preview/{extractedCode}";
-            NavManager.NavigateTo(targetUrl, forceLoad: true);
+            extractedCode = match.Groups[1].Value;
         }
-        catch (UriFormatException)
+
+        if (string.IsNullOrEmpty(extractedCode))
         {
-            _errorMessage = "Wprowadzony tekst nie jest poprawnym formatem URL.";
+            throw new NotImplementedException();
         }
-        catch (Exception ex)
-        {
-            _errorMessage = $"Wystąpił nieoczekiwany błąd podczas przetwarzania linku: {ex.Message}";
-            Console.WriteLine($"Błąd: {ex}");
-        }
-    }
 
-    private void HandleInvalidSubmit()
-    {
-        _errorMessage = "Formularz zawiera błędy walidacji. Popraw dane.";
+        string targetUrl = $"/setplaylist/preview/{extractedCode}";
+        NavManager.NavigateTo(targetUrl);
+        await Task.CompletedTask;
     }
 }
+
+<style>
+    .validation-message {
+        color: var(--bs-form-invalid-color);
+    }
+</style>
