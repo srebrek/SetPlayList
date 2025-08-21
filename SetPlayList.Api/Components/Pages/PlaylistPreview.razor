@@ -162,7 +162,16 @@ else
             playlistPreview.Name = formModel.PlaylistName;
             for (int i = 0; i < playlistPreview.Tracks.Count; i++)
             {
-                playlistPreview.Tracks[i].SelectedTrackId = formModel.TrackSelections[i];
+                var result = formModel.TrackSelections.TryGetValue(i, out var chosenTrackId);
+                if (result)
+                {
+                    playlistPreview.Tracks[i].SelectedTrackId = chosenTrackId;
+                }
+                else
+                {
+                    playlistPreview.Tracks[i].SelectedTrackId = null;
+                    formModel.TrackSelections[i] = string.Empty;
+                }
             }
         }
         else
@@ -171,7 +180,7 @@ else
             formModel.PlaylistName = playlistPreview.Name;
             for (int i = 0; i < playlistPreview.Tracks.Count; i++)
             {
-                formModel.TrackSelections.Add(playlistPreview.Tracks[i].SpotifyOptions.FirstOrDefault()?.Id);
+                formModel.TrackSelections[i] = playlistPreview.Tracks[i].SpotifyOptions.FirstOrDefault()?.Id ?? string.Empty;
             }
         }
         editContext = new(formModel);
@@ -197,7 +206,7 @@ else
         [StringLength(255)]
         public string? PlaylistName { get; set; }
 
-        public List<string> TrackSelections { get; set; } = new();
+        public Dictionary<int, string> TrackSelections { get; set; } = new();
     }
 }
 

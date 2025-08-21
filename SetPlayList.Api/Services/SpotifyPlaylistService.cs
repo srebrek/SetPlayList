@@ -1,6 +1,7 @@
 ﻿using SetPlayList.Core.DTOs.Spotify;
 using SetPlayList.Core.Interfaces;
 using SetPlayList.Core.Models;
+using System.Globalization;
 using System.Net;
 
 namespace SetPlayList.Api.Services;
@@ -38,7 +39,7 @@ public class SpotifyPlaylistService(
             proposedTracks);
 
         var dateString = setlist.EventDate;
-        _ = DateOnly.TryParse(dateString, out var date);
+        _ = DateOnly.TryParseExact(dateString, "dd-MM-yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date);
         List<string?> titleParts = [
             artistName,
             setlist.Venue.City.Name,
