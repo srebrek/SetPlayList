@@ -75,7 +75,7 @@
         var uri = new Uri(_linkModel.Link);
         string? extractedCode = null;
 
-        var regex = new Regex(@"-([a-f0-9]{8})\.html$", RegexOptions.IgnoreCase);
+        var regex = new Regex(@"-([a-f0-9]+)\.html$", RegexOptions.IgnoreCase);
         var match = regex.Match(uri.AbsolutePath);
         if (match.Success && match.Groups.Count > 1)
         {
