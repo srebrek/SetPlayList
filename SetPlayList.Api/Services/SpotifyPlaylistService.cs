@@ -69,7 +69,7 @@ public class SpotifyPlaylistService(
         {
             if (proposition.tracks is null || proposition.httpStatusCode != HttpStatusCode.OK)
             {
-                throw new NotImplementedException();
+                return (new ProposedPlaylist(), HttpStatusCode.Forbidden);
             }
 
             foreach (var track in proposition.tracks)

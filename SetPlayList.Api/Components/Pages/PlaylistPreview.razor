@@ -13,7 +13,7 @@
 <PageTitle>SetPlayList</PageTitle>
 
 
-@if (playlistPreview is not null && formModel is not null && !playlistSaved)
+@if (playlistPreview is not null && formModel is not null && !playlistSaved && notRegistered is false)
 {
     <article class="fade-in">
         <div class="px-md-3">
@@ -85,6 +85,17 @@
         </div>
     </article>
 }
+else if (notRegistered)
+{
+    <article class="fade-in">
+        <h2 class=" my-3 display-5 fw-bold mb-4">Playlist Preview</h2>
+        <div class="alert alert-warning" role="alert">
+            Unfortunately due to latest Spotify policy changes, only companies with at least 250 000 monthly active users can use Spotify API to create playlists on behalf of users.
+            If you want to use SetPlayList please contact me via email.
+            Full showcase is on my reddit <a href="https://github.com/srebrek/SetPlayList" class="link-warning link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">post</a>.
+        </div>
+    </article>
+}
 else if (loginUrl is not null)
 {
     <article class="fade-in">
@@ -138,6 +149,7 @@ else
 
     private bool invalidSubmit;
     private bool loggedIn;
+    private bool notRegistered;
 
     protected override async Task OnInitializedAsync()
     {
@@ -156,6 +168,11 @@ else
         }
 
         (playlistPreview, var httpStatusCode) = await PlaylistService.GeneratePreviewAsync(SetlistId!, AccessToken);
+
+        if (httpStatusCode == System.Net.HttpStatusCode.Forbidden)
+        {
+            notRegistered = true;
+        }
 
         if (formModel is not null)
         {
