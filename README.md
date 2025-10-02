@@ -1,4 +1,4 @@
-# My Portfolio | Spotify & Setlist.fm Integration
+# My Portfolio | SetPlayList
 
 ## Table of Contents
 - [Project Description](#project-description)
@@ -72,4 +72,4 @@ To run the project on your computer, follow these steps:
     ```
     Alternatively, you can run the project from an IDE such as Visual Studio.
 4.  **Open in Browser:**
-    The application will be available at `https://localhost:XXXX` (where `XXXX` is the port number displayed in the console after running).
+    The application will be available at `https://localhost:7101`.
