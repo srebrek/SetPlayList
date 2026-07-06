@@ -44,14 +44,14 @@ If you want to use SetPlayList on my website please contact me via email.
 ## Screenshots
 Below are screenshots showcasing key aspects of the application, including its user interface and the Spotify integration in action:
 
-![Screenshot 1](SetPlayList.Api\wwwroot\img\SetPlaylistShowcase1.png)
+![Screenshot 1](SetPlayList.Api/wwwroot/img/SetPlaylistShowcase1.png)
 <br>
 <br>
 <br>
 <br>
 <br>
 <br>
-![Screenshot 1](SetPlayList.Api\wwwroot\img\SetPlaylistShowcase2.png)
+![Screenshot 1](SetPlayList.Api/wwwroot/img/SetPlaylistShowcase2.png)
 
 ## How to Run Locally
 To run the project on your computer, follow these steps:
