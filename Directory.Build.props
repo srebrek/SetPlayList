@@ -11,7 +11,5 @@
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
 
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
-    <!-- 1573/1591: missing XML docs are not enforced -->
-    <NoWarn>$(NoWarn);1573;1591</NoWarn>
   </PropertyGroup>
 </Project>
