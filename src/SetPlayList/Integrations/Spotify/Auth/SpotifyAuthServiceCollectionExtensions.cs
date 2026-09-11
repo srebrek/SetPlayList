@@ -1,4 +1,6 @@
+using System.Net.Http.Headers;
 using System.Security.Claims;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OAuth;
@@ -23,17 +25,33 @@ internal static class SpotifyAuthServiceCollectionExtensions
                 options.Scope.Add("playlist-modify-private");
 
                 options.ClaimActions.MapJsonKey(SpotifyClaims.UserIdType, "id");
+                options.ClaimActions.MapJsonKey(ClaimTypes.Name, "display_name");
 
                 options.Events = new OAuthEvents
                 {
-                    OnCreatingTicket = context =>
+                    OnCreatingTicket = async context =>
                     {
                         if (context.AccessToken is not null)
                         {
                             context.Identity?.AddClaim(new Claim(SpotifyClaims.AccessTokenType, context.AccessToken));
                         }
 
-                        return Task.CompletedTask;
+                        using HttpRequestMessage request = new(HttpMethod.Get, context.Options.UserInformationEndpoint);
+                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", context.AccessToken);
+
+                        using HttpResponseMessage response = await context.Backchannel.SendAsync(
+                            request,
+                            HttpCompletionOption.ResponseHeadersRead,
+                            context.HttpContext.RequestAborted);
+                        response.EnsureSuccessStatusCode();
+
+                        using Stream stream = await response.Content.ReadAsStreamAsync(
+                            context.HttpContext.RequestAborted);
+
+                        using JsonDocument user = await JsonDocument.ParseAsync(
+                            stream, cancellationToken: context.HttpContext.RequestAborted);
+
+                        context.RunClaimActions(user.RootElement);
                     },
                 };
             });
