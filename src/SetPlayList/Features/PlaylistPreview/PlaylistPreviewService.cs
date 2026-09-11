@@ -1,9 +1,7 @@
 using System.Globalization;
 using SetPlayList.Common;
 using SetPlayList.Integrations.SetlistFm;
-using SetPlayList.Integrations.SetlistFm.Dtos;
 using SetPlayList.Integrations.Spotify;
-using SetPlayList.Integrations.Spotify.Dtos;
 
 namespace SetPlayList.Features.PlaylistPreview;
 
@@ -70,15 +68,9 @@ internal sealed partial class PlaylistPreviewService(
         return playlist;
     }
 
-    public async Task<Result<bool>> CreatePlaylistOnSpotifyAsync(ProposedPlaylist playlist, string accessToken, CancellationToken cancellationToken)
+    public async Task<Result> CreatePlaylistOnSpotifyAsync(ProposedPlaylist playlist, string userId, string accessToken, CancellationToken cancellationToken)
     {
-        Result<string> userIdResult = await _spotifyApiClient.GetCurrentUserIdAsync(accessToken, cancellationToken);
-        if (userIdResult.IsFailure)
-        {
-            return userIdResult.Error!;
-        }
-
-        Result<string> playlistIdResult = await _spotifyApiClient.CreatePlaylistAsync(userIdResult.Value, playlist.Name, accessToken, cancellationToken);
+        Result<string> playlistIdResult = await _spotifyApiClient.CreatePlaylistAsync(userId, playlist.Name, accessToken, cancellationToken);
         if (playlistIdResult.IsFailure)
         {
             return playlistIdResult.Error!;

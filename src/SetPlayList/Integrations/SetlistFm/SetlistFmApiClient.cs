@@ -2,44 +2,40 @@ using System.Net;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
 using SetPlayList.Common;
-using SetPlayList.Integrations.SetlistFm.Dtos;
 
 namespace SetPlayList.Integrations.SetlistFm;
 
 internal sealed partial class SetlistFmApiClient(HttpClient httpClient, IOptions<SetlistFmApiSettings> settings, ILogger<SetlistFmApiClient> logger)
 {
-    private readonly HttpClient _httpClient = httpClient;
-    private readonly SetlistFmApiSettings _settings = settings.Value;
-    private readonly ILogger<SetlistFmApiClient> _logger = logger;
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     public async Task<Result<Setlist>> GetSetlistAsync(string setlistId, CancellationToken cancellationToken)
     {
         using HttpRequestMessage request = new(HttpMethod.Get, "https://api.setlist.fm/rest/1.0/setlist/" + setlistId);
         request.Headers.Add("Accept", "application/json");
-        request.Headers.Add("x-api-key", _settings.ClientSecret);
+        request.Headers.Add("x-api-key", settings.Value.ClientSecret);
 
         try
         {
-            using HttpResponseMessage response = await _httpClient.SendAsync(request, cancellationToken);
+            using HttpResponseMessage response = await httpClient.SendAsync(request, cancellationToken);
             string content = await response.Content.ReadAsStringAsync(cancellationToken);
 
             if (!response.IsSuccessStatusCode)
             {
                 if (response.StatusCode == HttpStatusCode.NotFound)
                 {
-                    LogNotFound(_logger, setlistId, content);
+                    LogNotFound(logger, setlistId, content);
                     return Error.NotFound($"No setlist found for id '{setlistId}'.");
                 }
 
-                LogRequestFailed(_logger, setlistId, response.StatusCode, content);
+                LogRequestFailed(logger, setlistId, response.StatusCode, content);
                 return Error.Failure("Failed to retrieve the setlist from setlist.fm.");
             }
 
             Setlist? setlist = JsonSerializer.Deserialize<Setlist>(content, JsonOptions);
             if (setlist is null)
             {
-                LogEmptyResponse(_logger, setlistId, content);
+                LogEmptyResponse(logger, setlistId, content);
                 return Error.Failure("setlist.fm returned an empty response.");
             }
 
@@ -47,12 +43,12 @@ internal sealed partial class SetlistFmApiClient(HttpClient httpClient, IOptions
         }
         catch (HttpRequestException ex)
         {
-            LogNetworkError(_logger, setlistId, ex);
+            LogNetworkError(logger, setlistId, ex);
             return Error.Failure("Network error while contacting setlist.fm.");
         }
         catch (JsonException ex)
         {
-            LogDeserializationError(_logger, setlistId, ex);
+            LogDeserializationError(logger, setlistId, ex);
             return Error.Failure("Failed to read the setlist.fm response.");
         }
     }

@@ -1,6 +1,6 @@
 namespace SetPlayList.Integrations.SetlistFm;
 
-internal sealed class SetlistFmApiSettings
+internal sealed record SetlistFmApiSettings
 {
-    public string ClientSecret { get; set; } = string.Empty;
+    public string ClientSecret { get; init; } = string.Empty;
 }

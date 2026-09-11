@@ -1,5 +1,5 @@
 @page "/preview/{SetlistId}"
-@using SetPlayList.Features.SpotifyAuth
+@using SetPlayList.Integrations.Spotify.Auth
 @inject PlaylistPreviewService PreviewService
 
 <PageTitle>SetPlayList - Preview</PageTitle>
@@ -56,14 +56,28 @@
                         }
                         else
                         {
-                            <MudRadioGroup T="string" @bind-Value="track.SelectedTrackId" Class="mt-2">
+                            <MudGrid Spacing="2" Class="mt-2">
                                 @foreach (var option in track.Options)
                                 {
-                                    <MudRadio Value="@option.Id" Class="d-block">
-                                        @option.Name — @string.Join(", ", option.Artists) (@option.AlbumName)
-                                    </MudRadio>
+                                    var isSelected = track.SelectedTrackId == option.Id;
+                                    <MudItem xs="12" sm="6" md="4">
+                                        <MudCard Outlined="true"
+                                                 Style="@($"cursor:pointer;height:100%;border:2px solid {(isSelected ? "var(--mud-palette-primary)" : "transparent")};")"
+                                                 @onclick="() => track.SelectedTrackId = option.Id">
+                                            <MudCardMedia Image="@option.AlbumImageUrl" Height="140" />
+                                            <MudCardContent>
+                                                <MudText Typo="Typo.body2">@option.Name</MudText>
+                                                <MudText Typo="Typo.caption">@string.Join(", ", option.Artists)</MudText>
+                                                <MudText Typo="Typo.caption">@option.AlbumName</MudText>
+                                            </MudCardContent>
+                                            <MudCardActions Class="justify-end">
+                                                <MudIcon Icon="@(isSelected ? Icons.Material.Filled.CheckCircle : Icons.Material.Outlined.RadioButtonUnchecked)"
+                                                         Color="@(isSelected ? Color.Primary : Color.Default)" />
+                                            </MudCardActions>
+                                        </MudCard>
+                                    </MudItem>
                                 }
-                            </MudRadioGroup>
+                            </MudGrid>
                         }
                     </MudCardContent>
                 </MudCard>
@@ -85,6 +99,7 @@
 
     private ProposedPlaylist? _playlist;
     private string? _accessToken;
+    private string? _userId;
     private string? _errorMessage;
     private bool _loading = true;
     private bool _submitting;
@@ -99,8 +114,9 @@
         }
 
         var authState = await AuthStateTask;
-        _accessToken = SpotifyAccessToken.Get(authState.User);
-        if (string.IsNullOrEmpty(_accessToken))
+        _accessToken = SpotifyClaims.GetAccessToken(authState.User);
+        _userId = SpotifyClaims.GetUserId(authState.User);
+        if (string.IsNullOrEmpty(_accessToken) || string.IsNullOrEmpty(_userId))
         {
             _loading = false;
             return;
@@ -110,7 +126,7 @@
         _loading = false;
         if (result.IsFailure)
         {
-            _errorMessage = result.Error!.Message;
+            _errorMessage = GetErrorMessage(result.Error!);
             return;
         }
 
@@ -119,21 +135,29 @@
 
     private async Task Submit()
     {
-        if (_playlist is null || _accessToken is null)
+        if (_playlist is null || _accessToken is null || _userId is null)
         {
             return;
         }
 
         _submitting = true;
-        var result = await PreviewService.CreatePlaylistOnSpotifyAsync(_playlist, _accessToken, CancellationToken.None);
+        var result = await PreviewService.CreatePlaylistOnSpotifyAsync(_playlist, _userId, _accessToken, CancellationToken.None);
         _submitting = false;
 
         if (result.IsFailure)
         {
-            _errorMessage = result.Error!.Message;
+            _errorMessage = GetErrorMessage(result.Error!);
             return;
         }
 
         _playlistSaved = true;
     }
+
+    private static string GetErrorMessage(Error error) => error.Type switch
+    {
+        ErrorType.Unauthorized =>
+            "This app is in Spotify's Development Mode and limited to 25 allow-listed users. " +
+            "See the SetPlayList showcase at https://TODO-DOMAIN#setPlayList for a full walkthrough.",
+        _ => error.Message,
+    };
 }
