@@ -1,75 +1,60 @@
-# My Portfolio | SetPlayList
+# SetPlayList
 
-## Table of Contents
-- [Project Description](#project-description)
-- [Features](#features)
-- [Technologies Used](#technologies-used)
-- [Unit Tests](#unit-tests)
-- [Live Version](#live-version)
-- [Important Note Regarding Spotify API](#important-note-regarding-spotify-api)
-- [Screenshots](#screenshots)
-- [How to Run Locally](#how-to-run-locally)
+Fetches a saved concert setlist from [setlist.fm](https://www.setlist.fm/) and turns it into a Spotify
+playlist, with a preview step where each song's Spotify match can be swapped before saving.
 
-## Project Description
-This project serves as my personal portfolio, showcasing my skills in building full-stack web applications. The core of the project is an application that integrates data from the Spotify API and Setlist.fm API, automating the process of creating Spotify playlists based on saved concert setlists. The application also offers real-time playlist editing capabilities.
+Blazor Server (net10.0) + MudBlazor, sliced by feature. The portfolio content that used to live in this
+repo moved to a separate static site.
 
-The entire project is built using the ASP.NET platform in .NET 8, with the frontend layer implemented in Blazor technology. The user interface has been designed using the Bootstrap framework, ensuring responsiveness and an aesthetic appearance.
+## Important note about the Spotify API
 
-## Features
-*   **Setlist.fm Integration**: Fetches setlists from concerts that have been saved on the Setlist.fm platform.
-*   **Spotify Integration**: Automatically creates Spotify playlists containing tracks from the fetched setlists.
-*   **Real-time Editing**: Ability to preview and modify the Spotify playlist before its final saving.
-*   **Intuitive User Interface**: Thanks to Blazor and Bootstrap, the application is easy to use and visually appealing.
-*   **Portfolio**: The project serves as a demonstration of my full-stack development skills.
+Spotify now requires apps to be approved for Extended Quota Mode before they can create playlists on
+behalf of arbitrary users; unapproved apps are capped at 25 allow-listed accounts (Development Mode).
+Playlist creation will fail with a 403 for anyone not on that allow-list — see the showcase video at
+`https://TODO-DOMAIN#setPlayList` for a full walkthrough instead.
 
-## Technologies Used
-*   **Backend**: ASP.NET Core (.NET 8)
-*   **Frontend**: Blazor
-*   **Styling**: Bootstrap
-*   **API Integrations**:
-    *   Spotify API
-    *   Setlist.fm API
+## Running locally
 
-## Unit Tests
-The project includes a suite of unit tests that ensure the reliability and correct functioning of key business logic components and API integrations.
+```bash
+dotnet user-secrets set "Spotify:ClientId" "..." --project src/SetPlayList
+dotnet user-secrets set "Spotify:ClientSecret" "..." --project src/SetPlayList
+dotnet user-secrets set "Spotify:RedirectUri" "https://localhost:7101/signin-spotify" --project src/SetPlayList
+dotnet user-secrets set "SetlistFm:ClientSecret" "..." --project src/SetPlayList
 
-## Live Version
-The application is available online at:
-[https://zlotekmprofile.net/](https://zlotekmprofile-fff0ghczcfa3dyfs.polandcentral-01.azurewebsites.net/)
+dotnet run --project src/SetPlayList
+```
 
-## Important Note Regarding Spotify API
-Unfortunately due to latest Spotify policy changes, only companies with at least 250 000 monthly active users can use Spotify API to create playlists on behalf of users.
-If you want to use SetPlayList on my website please contact me via email.
+The app is reachable at `https://localhost:7101`. Without any secrets configured it still renders (home
+page, the "not logged in" preview state, `/health`) — only the Spotify login/playlist-creation path
+needs real credentials.
 
-## Screenshots
-Below are screenshots showcasing key aspects of the application, including its user interface and the Spotify integration in action:
+Data-protection keys are kept in-container, so a scale-to-zero cold start invalidates existing login
+cookies (users just log in again) — acceptable for a demo; persisting keys would need blob storage + Key
+Vault.
 
-![Screenshot 1](SetPlayList.Api/wwwroot/img/SetPlaylistShowcase1.png)
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-![Screenshot 1](SetPlayList.Api/wwwroot/img/SetPlaylistShowcase2.png)
+## Container
 
-## How to Run Locally
-To run the project on your computer, follow these steps:
+No Dockerfile — SDK container publish, same as the reference app this was styled after:
 
-1.  **Clone the Repository:**
-    ```bash
-    git clone https://github.com/srebrek/SetPlayList
-    cd SetPlayList
-    ```
-2.  **Configure API Keys:**
-    *   Obtain your API keys for the Spotify API and Setlist.fm API.
-    *   Add them to your `appsettings.json` file or as environment variables, according to your project's configuration.
-    *   By default RedirectUri should be "https://localhost:7101/auth/spotify/callback".
-3.  **Build and Run the Project:**
-    ```bash
-    dotnet build
-    dotnet run
-    ```
-    Alternatively, you can run the project from an IDE such as Visual Studio.
-4.  **Open in Browser:**
-    The application will be available at `https://localhost:7101`.
+```bash
+dotnet publish src/SetPlayList/SetPlayList.csproj \
+  -p:PublishProfile=DefaultContainer \
+  -p:ContainerRegistry=<acr-login-server>
+```
+
+## Deployment (TODO before it actually works)
+
+- [ ] Create/point at the shared ACR and fill in `ACR_LOGIN_SERVER`, `CONTAINER_APP_NAME`,
+      `RESOURCE_GROUP` in `.github/workflows/deploy.yml`.
+- [ ] Fill in `acrLoginServer`, `containerImageName`, `acrPullIdentityId` in `infra/main.parameters.json`.
+- [ ] Set the `AZURE_CLIENT_ID` / `AZURE_TENANT_ID` / `AZURE_SUBSCRIPTION_ID` GitHub secrets for the
+      federated-credential login used by the deploy workflow.
+- [ ] Set `SPOTIFY_CLIENT_ID` / `SPOTIFY_CLIENT_SECRET` / `SETLISTFM_CLIENT_SECRET` for the
+      `az deployment` / `azd provision` step (see `infra/main.parameters.json`).
+- [ ] Pick the real subdomain and update `spotifyRedirectUri` in `infra/main.parameters.json` (must also
+      match the redirect URI registered in the Spotify developer dashboard).
+- [ ] `azd` is not installed locally (only `az`) — use `az deployment sub what-if` against
+      `infra/main.bicep` before any real deploy, or install `azd` first.
+
+Custom subdomain binding is a manual/CLI step (Container Apps custom domain + certificate), not part of
+these files.

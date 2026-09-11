@@ -363,4 +363,4 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-/SetPlayList.Api/appsettings.Development.json
+/src/SetPlayList/appsettings.Development.json

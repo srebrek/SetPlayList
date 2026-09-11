@@ -1,0 +1,64 @@
+@page "/"
+@inject NavigationManager NavigationManager
+
+<PageTitle>SetPlayList</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">SetPlayList</MudText>
+<MudText Class="mb-6">
+    An online tool to quickly save a concert setlist from
+    <MudLink Href="https://www.setlist.fm/" Target="_blank">setlist.fm</MudLink>
+    as a playlist on Spotify. Paste a setlist link to get started.
+</MudText>
+
+<MudForm @ref="_form" Model="_model" @bind-IsValid="_isValid">
+    <MudTextField T="string"
+                   Label="Setlist.fm URL"
+                   @bind-Value="_model.Link"
+                   Placeholder="https://www.setlist.fm/setlist/rammstein/2022/pge-narodowy-warsaw-poland-33b2b0fd.html"
+                   Required="true"
+                   RequiredError="A setlist URL is required."
+                   Validation="@(new Func<string, string?>(ValidateUrl))" />
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Class="mt-3">@_errorMessage</MudAlert>
+    }
+
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="Submit">
+        Confirm
+    </MudButton>
+</MudForm>
+
+@code {
+    private MudForm _form = null!;
+    private readonly LinkModel _model = new();
+    private bool _isValid;
+    private string? _errorMessage;
+
+    private sealed class LinkModel
+    {
+        public string Link { get; set; } = string.Empty;
+    }
+
+    private static string? ValidateUrl(string value) =>
+        Uri.TryCreate(value, UriKind.Absolute, out _) ? null : "Enter a valid URL.";
+
+    private async Task Submit()
+    {
+        _errorMessage = null;
+        await _form.ValidateAsync();
+        if (!_isValid)
+        {
+            return;
+        }
+
+        var result = SetlistUrlParser.ParseId(_model.Link);
+        if (result.IsFailure)
+        {
+            _errorMessage = result.Error!.Message;
+            return;
+        }
+
+        NavigationManager.NavigateTo($"/preview/{result.Value}");
+    }
+}

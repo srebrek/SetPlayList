@@ -1,0 +1,17 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".gitignore" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="azure.yaml" />
+  </Folder>
+  <Folder Name="/Solution Items/infra/">
+    <File Path="infra/main.bicep" />
+    <File Path="infra/main.parameters.json" />
+    <File Path="infra/resources.bicep" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/SetPlayList/SetPlayList.csproj" />
+  </Folder>
+</Solution>

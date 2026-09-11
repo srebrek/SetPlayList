@@ -1,9 +1,0 @@
-@Api_HostAddress = https://localhost:7101
-
-
-###
-GET {{Api_HostAddress}}/auth/spotify/login
-
-
-###
-GET https://localhost:7101/api/setlist/63ab8613

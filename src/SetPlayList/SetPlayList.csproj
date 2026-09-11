@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+    <UserSecretsId>setplaylist-dev-secrets</UserSecretsId>
+
+    <EnableSdkContainerSupport>true</EnableSdkContainerSupport>
+    <ContainerFamily>noble-chiseled</ContainerFamily>
+    <ContainerRepository>setplaylist</ContainerRepository>
+    <ContainerImageTags>latest</ContainerImageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MudBlazor" />
+  </ItemGroup>
+
+</Project>

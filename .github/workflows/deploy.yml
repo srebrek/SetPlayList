@@ -1,0 +1,53 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  # TODO: fill in once the shared ACR exists.
+  ACR_LOGIN_SERVER: TODO-ACR-LOGIN-SERVER
+  CONTAINER_APP_NAME: TODO-CONTAINER-APP-NAME
+  RESOURCE_GROUP: TODO-RESOURCE-GROUP
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.x'
+
+      - name: Azure login (federated credential)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: ACR login
+        run: az acr login --name $(echo "$ACR_LOGIN_SERVER" | cut -d. -f1)
+
+      - name: Publish container image
+        run: |
+          dotnet publish src/SetPlayList/SetPlayList.csproj \
+            -p:PublishProfile=DefaultContainer \
+            -p:ContainerRegistry=$ACR_LOGIN_SERVER \
+            -p:ContainerImageTags=${{ github.sha }}
+
+      - name: Deploy to Azure Container Apps
+        run: |
+          az containerapp update \
+            --name "$CONTAINER_APP_NAME" \
+            --resource-group "$RESOURCE_GROUP" \
+            --image "$ACR_LOGIN_SERVER/setplaylist:${{ github.sha }}"
