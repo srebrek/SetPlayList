@@ -11,7 +11,7 @@ repo moved to a separate static site.
 Spotify now requires apps to be approved for Extended Quota Mode before they can create playlists on
 behalf of arbitrary users; unapproved apps are capped at 25 allow-listed accounts (Development Mode).
 Playlist creation will fail with a 403 for anyone not on that allow-list — see the showcase video at
-`https://TODO-DOMAIN#setPlayList` for a full walkthrough instead.
+`https://zlotekmikolaj.com#setPlayList` for a full walkthrough instead.
 
 ## Running locally
 
@@ -42,19 +42,12 @@ dotnet publish src/SetPlayList/SetPlayList.csproj \
   -p:ContainerRegistry=<acr-login-server>
 ```
 
-## Deployment (TODO before it actually works)
+## Deployment
 
-- [ ] Create/point at the shared ACR and fill in `ACR_LOGIN_SERVER`, `CONTAINER_APP_NAME`,
-      `RESOURCE_GROUP` in `.github/workflows/deploy.yml`.
-- [ ] Fill in `acrLoginServer`, `containerImageName`, `acrPullIdentityId` in `infra/main.parameters.json`.
-- [ ] Set the `AZURE_CLIENT_ID` / `AZURE_TENANT_ID` / `AZURE_SUBSCRIPTION_ID` GitHub secrets for the
-      federated-credential login used by the deploy workflow.
-- [ ] Set `SPOTIFY_CLIENT_ID` / `SPOTIFY_CLIENT_SECRET` / `SETLISTFM_CLIENT_SECRET` for the
-      `az deployment` / `azd provision` step (see `infra/main.parameters.json`).
-- [ ] Pick the real subdomain and update `spotifyRedirectUri` in `infra/main.parameters.json` (must also
-      match the redirect URI registered in the Spotify developer dashboard).
-- [ ] `azd` is not installed locally (only `az`) — use `az deployment sub what-if` against
-      `infra/main.bicep` before any real deploy, or install `azd` first.
+Live at <https://setplaylist.zlotekmikolaj.com>, on Azure Container Apps. Pushing to `master` runs
+`.github/workflows/cicd.yml`, which builds the image with the SDK container publish, pushes it to the
+shared ACR and repoints the Container App at the new tag.
 
-Custom subdomain binding is a manual/CLI step (Container Apps custom domain + certificate), not part of
-these files.
+There is no IaC here — the infrastructure was created once with `az` and is written down in
+[`docs/deployment.md`](docs/deployment.md), together with the DNS, certificate and Spotify dashboard
+setup.
