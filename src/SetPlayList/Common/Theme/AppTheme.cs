@@ -12,7 +12,7 @@ internal static class AppTheme
         PaletteDark = new PaletteDark
         {
             Primary = "#ffb545",
-            Secondary = "#ffb545",
+            Secondary = "#3f51b5",
             Surface = "#1e1e2d",
             Background = "#1a1a27",
             BackgroundGray = "#151521",
