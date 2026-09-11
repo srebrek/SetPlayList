@@ -21,7 +21,7 @@ internal sealed partial class PlaylistPreviewService(
         Result<Setlist> setlistResult = await _setlistFmApiClient.GetSetlistAsync(setlistId, cancellationToken);
         if (setlistResult.IsFailure)
         {
-            return setlistResult.Error!;
+            return setlistResult.Error;
         }
 
         Setlist setlist = setlistResult.Value;
@@ -52,7 +52,7 @@ internal sealed partial class PlaylistPreviewService(
         {
             if (searchResult.IsFailure)
             {
-                LogNoMatches(_logger, track.OriginalSong.Name, searchResult.Error!.Message);
+                LogNoMatches(_logger, track.OriginalSong.Name, searchResult.Error.Message);
                 continue;
             }
 
@@ -73,13 +73,12 @@ internal sealed partial class PlaylistPreviewService(
         Result<string> playlistIdResult = await _spotifyApiClient.CreatePlaylistAsync(userId, playlist.Name, accessToken, cancellationToken);
         if (playlistIdResult.IsFailure)
         {
-            return playlistIdResult.Error!;
+            return playlistIdResult.Error;
         }
 
         List<string> trackIds = playlist.Tracks
             .Select(track => track.SelectedTrackId)
-            .Where(id => id is not null)
-            .Select(id => id!)
+            .OfType<string>()
             .ToList();
 
         return await _spotifyApiClient.AddTracksToPlaylistAsync(playlistIdResult.Value, trackIds, accessToken, cancellationToken);

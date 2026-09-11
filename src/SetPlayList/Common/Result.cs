@@ -1,15 +1,21 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace SetPlayList.Common;
 
-internal sealed class Result
+internal class Result
 {
-    private Result(bool isSuccess, Error? error)
+    protected Result(bool isSuccess, Error? error)
     {
         IsSuccess = isSuccess;
         Error = error;
     }
 
+    [MemberNotNullWhen(false, nameof(Error))]
     public bool IsSuccess { get; }
+
+    [MemberNotNullWhen(true, nameof(Error))]
     public bool IsFailure => !IsSuccess;
+
     public Error? Error { get; }
 
     public static Result Success() => new(true, null);
@@ -17,30 +23,20 @@ internal sealed class Result
     public static implicit operator Result(Error error) => new(false, error);
 }
 
-internal sealed class Result<T>
+internal sealed class Result<T> : Result
+    where T : notnull
 {
-    private readonly T? _value;
-
-    private Result(T value)
+    private Result(T value) : base(true, null)
     {
-        _value = value;
-        IsSuccess = true;
-        Error = null;
+        Value = value;
     }
 
-    private Result(Error error)
+    private Result(Error error) : base(false, error)
     {
-        _value = default;
-        IsSuccess = false;
-        Error = error;
     }
-
-    public bool IsSuccess { get; }
-    public bool IsFailure => !IsSuccess;
-    public Error? Error { get; }
 
     public T Value => IsSuccess
-        ? _value!
+        ? field!
         : throw new InvalidOperationException("Cannot access the value of a failed result.");
 
     public static implicit operator Result<T>(T value) => new(value);

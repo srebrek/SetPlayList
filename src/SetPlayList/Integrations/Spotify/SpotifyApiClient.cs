@@ -35,7 +35,7 @@ internal sealed partial class SpotifyApiClient(HttpClient httpClient, ILogger<Sp
         request.Headers.Authorization = new("Bearer", accessToken);
 
         Result<SearchResponse> result = await SendAsync<SearchResponse>(request, "search tracks", ct);
-        return result.IsSuccess ? result.Value.Tracks.Items : result.Error!;
+        return result.IsSuccess ? result.Value.Tracks.Items : result.Error;
     }
 
     public async Task<Result<string>> CreatePlaylistAsync(
@@ -49,7 +49,7 @@ internal sealed partial class SpotifyApiClient(HttpClient httpClient, ILogger<Sp
         request.Content = JsonContent.Create(new { name = playlistName }, options: s_jsonOptions);
 
         Result<CreatePlaylistResponse> result = await SendAsync<CreatePlaylistResponse>(request, "create playlist", ct);
-        return result.IsSuccess ? result.Value.Id : result.Error!;
+        return result.IsSuccess ? result.Value.Id : result.Error;
     }
 
     public async Task<Result> AddTracksToPlaylistAsync(
@@ -83,6 +83,7 @@ internal sealed partial class SpotifyApiClient(HttpClient httpClient, ILogger<Sp
     }
 
     private async Task<Result<T>> SendAsync<T>(HttpRequestMessage request, string action, CancellationToken cancellationToken)
+        where T : notnull
     {
         try
         {
