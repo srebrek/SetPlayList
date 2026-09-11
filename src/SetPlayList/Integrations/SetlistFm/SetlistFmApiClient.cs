@@ -5,11 +5,14 @@ using SetPlayList.Common;
 
 namespace SetPlayList.Integrations.SetlistFm;
 
-internal sealed partial class SetlistFmApiClient(HttpClient httpClient, IOptions<SetlistFmApiSettings> settings, ILogger<SetlistFmApiClient> logger)
+internal sealed partial class SetlistFmApiClient(
+    HttpClient httpClient,
+    IOptions<SetlistFmApiSettings> settings,
+    ILogger<SetlistFmApiClient> logger)
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private static readonly JsonSerializerOptions s_jsonOptions = new(JsonSerializerDefaults.Web);
 
-    public async Task<Result<Setlist>> GetSetlistAsync(string setlistId, CancellationToken cancellationToken)
+    public async Task<Result<Setlist>> GetSetlistAsync(string setlistId, CancellationToken ct)
     {
         using HttpRequestMessage request = new(HttpMethod.Get, "https://api.setlist.fm/rest/1.0/setlist/" + setlistId);
         request.Headers.Add("Accept", "application/json");
@@ -17,12 +20,12 @@ internal sealed partial class SetlistFmApiClient(HttpClient httpClient, IOptions
 
         try
         {
-            using HttpResponseMessage response = await httpClient.SendAsync(request, cancellationToken);
-            string content = await response.Content.ReadAsStringAsync(cancellationToken);
+            using HttpResponseMessage response = await httpClient.SendAsync(request, ct);
+            string content = await response.Content.ReadAsStringAsync(ct);
 
             if (!response.IsSuccessStatusCode)
             {
-                if (response.StatusCode == HttpStatusCode.NotFound)
+                if (response.StatusCode is HttpStatusCode.NotFound)
                 {
                     LogNotFound(logger, setlistId, content);
                     return Error.NotFound($"No setlist found for id '{setlistId}'.");
@@ -32,7 +35,7 @@ internal sealed partial class SetlistFmApiClient(HttpClient httpClient, IOptions
                 return Error.Failure("Failed to retrieve the setlist from setlist.fm.");
             }
 
-            Setlist? setlist = JsonSerializer.Deserialize<Setlist>(content, JsonOptions);
+            Setlist? setlist = JsonSerializer.Deserialize<Setlist>(content, s_jsonOptions);
             if (setlist is null)
             {
                 LogEmptyResponse(logger, setlistId, content);
