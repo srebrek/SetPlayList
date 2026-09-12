@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.HttpOverrides;
 using MudBlazor.Services;
-using SetPlayList.Components;
+using SetPlayList.Common.Components;
 using SetPlayList.Features.PlaylistPreview;
 using SetPlayList.Integrations.Spotify.Auth;
 using SetPlayList.Integrations.SetlistFm;
