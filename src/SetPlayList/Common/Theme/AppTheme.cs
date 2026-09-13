@@ -13,7 +13,7 @@ internal static class AppTheme
         {
             Primary = "#ffc107",
             Secondary = "#3f51b5",
-            Surface = "#1e1e2d",
+            Surface = "#1e1e1e",
             Background = "#161b19",
             BackgroundGray = "#151521",
             AppbarText = "#92929f",

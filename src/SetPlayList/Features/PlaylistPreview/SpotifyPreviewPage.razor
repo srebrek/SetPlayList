@@ -1,0 +1,174 @@
+@page "/preview/{SetlistId}/spotify"
+@using System.Net
+@using SetPlayList.Integrations.Spotify.Auth
+@inject PlaylistPreviewService PreviewService
+
+<PageTitle>SetPlayList - Spotify Preview</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Match Songs on Spotify</MudText>
+
+<AuthorizeView Context="authContext">
+    <NotAuthorized>
+        <MudAlert Severity="Severity.Info">
+            You have to be logged in to Spotify first.
+            <MudButton Href="@_loginUrl" Variant="Variant.Filled" Color="Color.Primary" Class="ml-2">Log in with Spotify</MudButton>
+        </MudAlert>
+    </NotAuthorized>
+    <Authorized>
+        @if (_loading)
+        {
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        }
+        else if (_errorMessage is not null)
+        {
+            <MudAlert Severity="Severity.Error">@_errorMessage</MudAlert>
+        }
+        else if (_playlistSaved)
+        {
+            <MudAlert Severity="Severity.Success">Playlist "<strong>@_playlist!.Name</strong>" saved on your Spotify profile.</MudAlert>
+        }
+        else if (_playlist is not null)
+        {
+            <MudTextField T="string" Label="Playlist Name" @bind-Value="_playlist.Name" Class="mb-4" />
+
+            @foreach (var track in _playlist.Tracks)
+            {
+                <MudCard Class="mb-4">
+                    <MudCardContent>
+                        <MudText Typo="Typo.subtitle1">
+                            @track.OriginalSong.Name
+                            @if (track.OriginalSong.IsTape)
+                            {
+                                <MudChip T="string" Size="Size.Small" Class="ml-2">tape</MudChip>
+                            }
+                        </MudText>
+                        @if (track.OriginalSong.With is not null)
+                        {
+                            <MudText Typo="Typo.body2">with: @track.OriginalSong.With</MudText>
+                        }
+                        @if (track.OriginalSong.OriginalArtist is not null)
+                        {
+                            <MudText Typo="Typo.body2">cover: @track.OriginalSong.OriginalArtist</MudText>
+                        }
+
+                        @if (track.Options.Count == 0)
+                        {
+                            <MudAlert Severity="Severity.Warning" Class="mt-2" Dense="true">No Spotify match found for this song.</MudAlert>
+                        }
+                        else
+                        {
+                            <MudGrid Spacing="2" Class="mt-2">
+                                @foreach (var option in track.Options)
+                                {
+                                    var isSelected = track.SelectedTrackId == option.Id;
+                                    <MudItem xs="12" sm="6" md="4">
+                                        <MudCard Outlined="true"
+                                                 Style="@($"cursor:pointer;height:100%;border:2px solid {(isSelected ? "var(--mud-palette-primary)" : "transparent")};")"
+                                                 @onclick="() => track.SelectedTrackId = option.Id">
+                                            <MudCardMedia Image="@option.AlbumImageUrl" Height="140" />
+                                            <MudCardContent>
+                                                <MudText Typo="Typo.body2">@option.Name</MudText>
+                                                <MudText Typo="Typo.caption">@string.Join(", ", option.Artists)</MudText>
+                                                <MudText Typo="Typo.caption">@option.AlbumName</MudText>
+                                            </MudCardContent>
+                                            <MudCardActions Class="justify-end">
+                                                <MudIcon Icon="@(isSelected ? Icons.Material.Filled.CheckCircle : Icons.Material.Outlined.RadioButtonUnchecked)"
+                                                         Color="@(isSelected ? Color.Primary : Color.Default)" />
+                                            </MudCardActions>
+                                        </MudCard>
+                                    </MudItem>
+                                }
+                            </MudGrid>
+                        }
+                    </MudCardContent>
+                </MudCard>
+            }
+
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit" Disabled="_submitting">
+                Submit
+            </MudButton>
+        }
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    [Parameter]
+    public string SetlistId { get; set; } = string.Empty;
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthStateTask { get; set; }
+
+    private ProposedPlaylist? _playlist;
+    private string? _accessToken;
+    private string? _userId;
+    private string? _errorMessage;
+    private bool _loading = true;
+    private bool _submitting;
+    private bool _playlistSaved;
+    private string _loginUrl = "/auth/login";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loginUrl = $"/auth/login?returnUrl={WebUtility.UrlEncode($"/preview/{SetlistId}/spotify")}";
+
+        if (AuthStateTask is null)
+        {
+            _loading = false;
+            return;
+        }
+
+        var authState = await AuthStateTask;
+        _accessToken = SpotifyClaims.GetAccessToken(authState.User);
+        _userId = SpotifyClaims.GetUserId(authState.User);
+        if (string.IsNullOrEmpty(_accessToken) || string.IsNullOrEmpty(_userId))
+        {
+            _loading = false;
+            return;
+        }
+
+        var previewResult = await PreviewService.GetSetlistPreviewAsync(SetlistId, CancellationToken.None);
+        if (previewResult.IsFailure)
+        {
+            _loading = false;
+            _errorMessage = previewResult.Error!.Message;
+            return;
+        }
+
+        _playlist = previewResult.Value;
+
+        var matchResult = await PreviewService.MatchTracksWithSpotifyAsync(_playlist, _accessToken, CancellationToken.None);
+        _loading = false;
+        if (matchResult.IsFailure)
+        {
+            _errorMessage = GetErrorMessage(matchResult.Error!);
+        }
+    }
+
+    private async Task Submit()
+    {
+        if (_playlist is null || _accessToken is null || _userId is null)
+        {
+            return;
+        }
+
+        _submitting = true;
+        var result = await PreviewService.CreatePlaylistOnSpotifyAsync(_playlist, _userId, _accessToken, CancellationToken.None);
+        _submitting = false;
+
+        if (result.IsFailure)
+        {
+            _errorMessage = GetErrorMessage(result.Error!);
+            return;
+        }
+
+        _playlistSaved = true;
+    }
+
+    private static string GetErrorMessage(Error error) => error.Type switch
+    {
+        ErrorType.Unauthorized =>
+            "This app is in Spotify's Development Mode and limited to 25 allow-listed users. " +
+            "See the SetPlayList showcase at https://TODO-DOMAIN#setPlayList for a full walkthrough.",
+        _ => error.Message,
+    };
+}

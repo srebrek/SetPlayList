@@ -6,8 +6,13 @@ internal static class SpotifyAuthEndpoints
 {
     public static void MapSpotifyAuthEndpoints(this WebApplication app)
     {
-        app.MapGet("/auth/login", () =>
-            Results.Challenge(new AuthenticationProperties { RedirectUri = "/" }, ["Spotify"]));
+        app.MapGet("/auth/login", (string? returnUrl) =>
+        {
+            string redirectUri = returnUrl is not null && Uri.IsWellFormedUriString(returnUrl, UriKind.Relative)
+                ? returnUrl
+                : "/";
+            return Results.Challenge(new AuthenticationProperties { RedirectUri = redirectUri }, ["Spotify"]);
+        });
 
         app.MapGet("/auth/logout", async (HttpContext context) =>
         {

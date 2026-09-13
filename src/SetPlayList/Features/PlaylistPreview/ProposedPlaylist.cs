@@ -3,6 +3,7 @@ namespace SetPlayList.Features.PlaylistPreview;
 internal sealed class ProposedPlaylist
 {
     public string Name { get; set; } = string.Empty;
+    public string Artist { get; set; } = string.Empty;
     public List<ProposedTrack> Tracks { get; init; } = [];
 }
 

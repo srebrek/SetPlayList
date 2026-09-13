@@ -16,7 +16,7 @@ internal sealed partial class PlaylistPreviewService(
     private readonly SpotifyApiClient _spotifyApiClient = spotifyApiClient;
     private readonly ILogger<PlaylistPreviewService> _logger = logger;
 
-    public async Task<Result<ProposedPlaylist>> GeneratePreviewAsync(string setlistId, string accessToken, CancellationToken cancellationToken)
+    public async Task<Result<ProposedPlaylist>> GetSetlistPreviewAsync(string setlistId, CancellationToken cancellationToken)
     {
         Result<Setlist> setlistResult = await _setlistFmApiClient.GetSetlistAsync(setlistId, cancellationToken);
         if (setlistResult.IsFailure)
@@ -39,9 +39,15 @@ internal sealed partial class PlaylistPreviewService(
         _ = DateOnly.TryParseExact(setlist.EventDate, "dd-MM-yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly date);
         List<string?> titleParts = [setlist.Artist.Name, setlist.Venue.City.Name, date.Year.ToString(CultureInfo.InvariantCulture)];
         playlist.Name = string.Join(" - ", titleParts.Where(part => !string.IsNullOrEmpty(part)));
+        playlist.Artist = setlist.Artist.Name;
 
+        return playlist;
+    }
+
+    public async Task<Result> MatchTracksWithSpotifyAsync(ProposedPlaylist playlist, string accessToken, CancellationToken cancellationToken)
+    {
         IEnumerable<Task<Result<List<Track>>>> searches = playlist.Tracks.Select(track => _spotifyApiClient.SearchTopTracksAsync(
-            track.OriginalSong.OriginalArtist ?? setlist.Artist.Name,
+            track.OriginalSong.OriginalArtist ?? playlist.Artist,
             track.OriginalSong.Name,
             PreviewTrackCount,
             accessToken,
@@ -65,7 +71,7 @@ internal sealed partial class PlaylistPreviewService(
             track.SelectedTrackId = track.Options.Count > 0 ? track.Options[0].Id : null;
         }
 
-        return playlist;
+        return Result.Success();
     }
 
     public async Task<Result> CreatePlaylistOnSpotifyAsync(ProposedPlaylist playlist, string userId, string accessToken, CancellationToken cancellationToken)
