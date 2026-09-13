@@ -1,0 +1,21 @@
+@page "/login-redirect"
+@using System.Net
+
+<PageTitle>SetPlayList - Log in with Spotify</PageTitle>
+
+<MudText Typo="Typo.h5" GutterBottom="true">Log in with Spotify</MudText>
+<MudText Class="mb-4">
+    Clicking the button below will take you to Spotify to log in.
+</MudText>
+<MudButton Href="@LoginUrl" Variant="Variant.Filled" Color="Color.Primary">
+    Continue to Spotify
+</MudButton>
+
+@code {
+    [SupplyParameterFromQuery]
+    [Parameter]
+    public string? ReturnUrl { get; set; }
+
+    private string LoginUrl =>
+        $"/auth/login?returnUrl={WebUtility.UrlEncode(ReturnUrl ?? "/")}";
+}

@@ -1,5 +1,4 @@
 @inherits LayoutComponentBase
-@inject NavigationManager Navigation
 
 <MudThemeProvider Theme="@AppTheme.Default" IsDarkMode="true" />
 <MudPopoverProvider />
@@ -14,7 +13,8 @@
             <Authorized>
                 <MudText Class="mx-4">@context.User.Identity?.Name</MudText>
                 <MudButton
-                    OnClick="@(() => Navigation.NavigateTo("auth/logout", forceLoad: true))"
+                    Href="auth/logout"
+                    data-enhance-nav="false"
                     Variant="Variant.Outlined"
                     Color="Color.Primary">
                     Log out
@@ -22,7 +22,7 @@
             </Authorized>
             <NotAuthorized>
                 <MudButton
-                    OnClick="@(() => Navigation.NavigateTo("auth/login", forceLoad: true))"
+                    Href="login-redirect"
                     Variant="Variant.Outlined"
                     Color="Color.Primary">
                     Log in with Spotify

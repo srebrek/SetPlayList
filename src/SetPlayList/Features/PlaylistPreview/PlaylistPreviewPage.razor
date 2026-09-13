@@ -1,6 +1,6 @@
 @page "/preview/{SetlistId}"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 @using System.Net
-@inject NavigationManager NavigationManager
 @inject PlaylistPreviewService PreviewService
 
 <PageTitle>SetPlayList - Preview</PageTitle>
@@ -80,7 +80,7 @@ else if (_playlist is not null)
             </MudStack>
         </NotAuthorized>
         <Authorized>
-            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="ContinueToSpotifyPreview">
+            <MudButton Href="@($"/preview/{SetlistId}/spotify")" Variant="Variant.Outlined" Color="Color.Primary">
                 Continue
             </MudButton>
         </Authorized>
@@ -94,11 +94,11 @@ else if (_playlist is not null)
     private ProposedPlaylist? _playlist;
     private string? _errorMessage;
     private bool _loading = true;
-    private string _loginUrl = "/auth/login";
+    private string _loginUrl = "/login-redirect";
 
     protected override async Task OnInitializedAsync()
     {
-        _loginUrl = $"/auth/login?returnUrl={WebUtility.UrlEncode($"/preview/{SetlistId}/spotify")}";
+        _loginUrl = $"/login-redirect?returnUrl={WebUtility.UrlEncode($"/preview/{SetlistId}/spotify")}";
 
         var result = await PreviewService.GetSetlistPreviewAsync(SetlistId, CancellationToken.None);
         _loading = false;
@@ -110,9 +110,6 @@ else if (_playlist is not null)
 
         _playlist = result.Value;
     }
-
-    private void ContinueToSpotifyPreview() =>
-        NavigationManager.NavigateTo($"/preview/{SetlistId}/spotify");
 
     private static string? BuildSongDetails(ProposedTrack track)
     {
