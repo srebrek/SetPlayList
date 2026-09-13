@@ -14,7 +14,8 @@
 </head>
 
 <body>
-    <Routes @rendermode="InteractiveServer" />
+    @* TODO: Implement prerender *@
+    <Routes @rendermode="@(new InteractiveServerRenderMode(prerender: false))" />
     <ReconnectModal />
     <script src="@Assets["_framework/blazor.web.js"]"></script>
     <script src="@Assets["_content/MudBlazor/MudBlazor.min.js"]"></script>
