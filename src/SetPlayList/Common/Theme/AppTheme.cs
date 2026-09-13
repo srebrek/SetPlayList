@@ -11,14 +11,14 @@ internal static class AppTheme
     {
         PaletteDark = new PaletteDark
         {
-            Primary = "#ffb545",
+            Primary = "#ffc107",
             Secondary = "#3f51b5",
             Surface = "#1e1e2d",
-            Background = "#1a1a27",
+            Background = "#161b19",
             BackgroundGray = "#151521",
             AppbarText = "#92929f",
-            AppbarBackground = "rgba(26,26,39,0.8)",
-            DrawerBackground = "#1a1a27",
+            AppbarBackground = "#161b19",
+            DrawerBackground = "#161b19",
             ActionDefault = "#74718e",
             ActionDisabled = "#9999994d",
             ActionDisabledBackground = "#605f6d4d",
