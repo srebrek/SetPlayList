@@ -8,10 +8,23 @@ retryButton.addEventListener("click", retry);
 const resumeButton = document.getElementById("components-resume-button");
 resumeButton.addEventListener("click", resume);
 
+// Firefox closes the WebSocket the moment a navigation starts, so the beginning of
+// a navigation is indistinguishable from a dropped connection and the dialog flashes
+// on screen for a few dozen milliseconds. See https://github.com/dotnet/aspnetcore/issues/40425
+// Delaying the dialog filters that out: a navigation replaces the page well before the
+// delay elapses, while a genuine drop is still unresolved.
+const showDelayMs = 1000;
+let showTimer;
+
 function handleReconnectStateChanged(event) {
     if (event.detail.state === "show") {
-        reconnectModal.showModal();
+        // "retrying" follows "show" immediately, so only "hide" may cancel the timer.
+        if (showTimer === undefined) {
+            showTimer = setTimeout(() => reconnectModal.showModal(), showDelayMs);
+        }
     } else if (event.detail.state === "hide") {
+        clearTimeout(showTimer);
+        showTimer = undefined;
         reconnectModal.close();
     } else if (event.detail.state === "failed") {
         document.addEventListener("visibilitychange", retryWhenDocumentBecomesVisible);

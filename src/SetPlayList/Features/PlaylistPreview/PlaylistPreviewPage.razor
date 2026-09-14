@@ -95,11 +95,11 @@ else if (_playlist is not null)
     private ProposedPlaylist? _playlist;
     private string? _errorMessage;
     private bool _loading = true;
-    private string _loginUrl = "/login-redirect";
+    private string _loginUrl = "/auth/login";
 
     protected override async Task OnInitializedAsync()
     {
-        _loginUrl = $"/login-redirect?returnUrl={WebUtility.UrlEncode($"/preview/{SetlistId}/spotify")}";
+        _loginUrl = $"/auth/login?returnUrl={WebUtility.UrlEncode($"/preview/{SetlistId}/spotify")}";
 
         var result = await PreviewService.GetSetlistPreviewAsync(SetlistId, CancellationToken.None);
         _loading = false;

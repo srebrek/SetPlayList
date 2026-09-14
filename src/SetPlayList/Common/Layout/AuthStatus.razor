@@ -1,4 +1,5 @@
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
+@using System.Net
 @inject NavigationManager Navigation
 
 <AuthorizeView>
@@ -13,10 +14,15 @@
     </Authorized>
     <NotAuthorized>
         <MudButton
-            OnClick="@(() => Navigation.NavigateTo("login-redirect"))"
+            OnClick="@(() => Navigation.NavigateTo(LoginUrl))"
             Variant="Variant.Outlined"
             Color="Color.Primary">
             Log in with Spotify
         </MudButton>
     </NotAuthorized>
 </AuthorizeView>
+
+@code {
+    private string LoginUrl =>
+        $"/auth/login?returnUrl={WebUtility.UrlEncode("/" + Navigation.ToBaseRelativePath(Navigation.Uri))}";
+}

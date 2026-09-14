@@ -106,11 +106,11 @@
     private bool _loading = true;
     private bool _submitting;
     private bool _playlistSaved;
-    private string _loginUrl = "/login-redirect";
+    private string _loginUrl = "/auth/login";
 
     protected override async Task OnInitializedAsync()
     {
-        _loginUrl = $"/login-redirect?returnUrl={WebUtility.UrlEncode($"/preview/{SetlistId}/spotify")}";
+        _loginUrl = $"/auth/login?returnUrl={WebUtility.UrlEncode($"/preview/{SetlistId}/spotify")}";
 
         if (AuthStateTask is null)
         {
