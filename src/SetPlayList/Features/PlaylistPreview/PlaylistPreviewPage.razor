@@ -71,7 +71,7 @@ else if (_playlist is not null)
                     </MudCardContent>
 
                     <MudCardActions>
-                        <MudButton OnClick="@(() => Navigation.NavigateTo(_loginUrl))" Variant="Variant.Text" Color="Color.Primary">
+                        <MudButton OnClick="@(() => Navigation.NavigateTo(_loginUrl, forceLoad: true))" Variant="Variant.Text" Color="Color.Primary">
                             Log in with Spotify
                         </MudButton>
                     </MudCardActions>

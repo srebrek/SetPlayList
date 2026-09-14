@@ -14,7 +14,7 @@
     </Authorized>
     <NotAuthorized>
         <MudButton
-            OnClick="@(() => Navigation.NavigateTo(LoginUrl))"
+            OnClick="@(() => Navigation.NavigateTo(LoginUrl, forceLoad: true))"
             Variant="Variant.Outlined"
             Color="Color.Primary">
             Log in with Spotify
