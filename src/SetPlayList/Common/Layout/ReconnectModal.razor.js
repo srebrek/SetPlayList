@@ -8,20 +8,40 @@ retryButton.addEventListener("click", retry);
 const resumeButton = document.getElementById("components-resume-button");
 resumeButton.addEventListener("click", resume);
 
-// Firefox closes the WebSocket the moment a navigation starts, so the beginning of
-// a navigation is indistinguishable from a dropped connection and the dialog flashes
-// on screen for a few dozen milliseconds. See https://github.com/dotnet/aspnetcore/issues/40425
-// Delaying the dialog filters that out: a navigation replaces the page well before the
-// delay elapses, while a genuine drop is still unresolved.
+// Firefox closes the WebSocket the moment a navigation starts, so Blazor reports a
+// dropped connection while the old page is still on screen and the dialog flashes up
+// mid-navigation. See https://github.com/dotnet/aspnetcore/issues/40425
+//
+// "beforeunload" fires just before that happens (measured: ~6ms earlier), so it tells
+// a navigation apart from a real outage. The short delay on top covers the case where
+// no unload event arrives at all.
 const showDelayMs = 1000;
 let showTimer;
+let navigatingAway = false;
+
+function markNavigating() {
+    navigatingAway = true;
+    clearTimeout(showTimer);
+    showTimer = undefined;
+    // A navigation can still be cancelled, leaving this document alive; stop
+    // suppressing the dialog after a while so real outages are still reported.
+    setTimeout(() => { navigatingAway = false; }, 10000);
+}
+
+window.addEventListener("beforeunload", markNavigating);
+window.addEventListener("pagehide", markNavigating);
 
 function handleReconnectStateChanged(event) {
-    if (event.detail.state === "show") {
-        // "retrying" follows "show" immediately, so only "hide" may cancel the timer.
-        if (showTimer === undefined) {
-            showTimer = setTimeout(() => reconnectModal.showModal(), showDelayMs);
+    if (event.detail.state === "show" || event.detail.state === "retrying") {
+        // "retrying" repeats, so only arm the timer once.
+        if (navigatingAway || showTimer !== undefined || reconnectModal.open) {
+            return;
         }
+        showTimer = setTimeout(() => {
+            if (!navigatingAway) {
+                reconnectModal.showModal();
+            }
+        }, showDelayMs);
     } else if (event.detail.state === "hide") {
         clearTimeout(showTimer);
         showTimer = undefined;
