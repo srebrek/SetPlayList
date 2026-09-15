@@ -2,6 +2,7 @@
 
 Fetches a saved concert setlist from [setlist.fm](https://www.setlist.fm/) and turns it into a Spotify
 playlist, with a preview step where each song's Spotify match can be swapped before saving.
+Live at <https://setplaylist.zlotekmikolaj.com>.
 
 Blazor Server (net10.0) + MudBlazor, sliced by feature. The portfolio content that used to live in this
 repo moved to a separate static site.

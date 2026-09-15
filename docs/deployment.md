@@ -82,4 +82,4 @@ container publish picks up through `SDK_CONTAINER_REGISTRY_UNAME` / `SDK_CONTAIN
 
 Redirect URIs must list `https://setplaylist.zlotekmikolaj.com/signin-spotify` alongside the local
 `https://localhost:7101/signin-spotify`. The app is in Development Mode, so every account that is going
-to create a playlist has to be added under User Management (25 max); everyone else gets a 403.
+to create a playlist has to be added under User Management (5 max); everyone else gets a 403.
