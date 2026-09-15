@@ -193,8 +193,8 @@
     private static string GetErrorMessage(Error error) => error.Type switch
     {
         ErrorType.Unauthorized =>
-            "This app is in Spotify's Development Mode and limited to 25 allow-listed users. " +
-            "See the SetPlayList showcase at https://TODO-DOMAIN#setPlayList for a full walkthrough.",
+            "This app is in Spotify's Development Mode and limited to 5 allow-listed users. " +
+            "See the SetPlayList showcase at https://zlotekmikolaj.com#setPlayList for a full walkthrough.",
         _ => error.Message,
     };
 }
