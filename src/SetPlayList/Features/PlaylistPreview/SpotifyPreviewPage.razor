@@ -1,5 +1,5 @@
 @page "/preview/{SetlistId}/spotify"
-@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@rendermode InteractiveServer
 @using System.Net
 @using SetPlayList.Integrations.Spotify.Auth
 @inject PlaylistPreviewService PreviewService
@@ -26,13 +26,13 @@
         }
         else if (_playlistSaved)
         {
-            <MudAlert Severity="Severity.Success">Playlist "<strong>@_playlist!.Name</strong>" saved on your Spotify profile.</MudAlert>
+            <MudAlert Severity="Severity.Success">Playlist "<strong>@Playlist!.Name</strong>" saved on your Spotify profile.</MudAlert>
         }
-        else if (_playlist is not null)
+        else if (Playlist is not null)
         {
-            <MudTextField T="string" Label="Playlist Name" @bind-Value="_playlist.Name" Class="mb-4" />
+            <MudTextField T="string" Label="Playlist Name" @bind-Value="Playlist.Name" Class="mb-4" />
 
-            @foreach (var track in _playlist.Tracks)
+            @foreach (var track in Playlist.Tracks)
             {
                 <MudCard Class="mb-4">
                     <MudCardContent>
@@ -99,7 +99,9 @@
     [CascadingParameter]
     private Task<AuthenticationState>? AuthStateTask { get; set; }
 
-    private ProposedPlaylist? _playlist;
+    [PersistentState(AllowUpdates = true)]
+    public ProposedPlaylist? Playlist { get; set; }
+
     private string? _accessToken;
     private string? _userId;
     private string? _errorMessage;
@@ -127,6 +129,12 @@
             return;
         }
 
+        if (Playlist is not null)
+        {
+            _loading = false;
+            return;
+        }
+
         var previewResult = await PreviewService.GetSetlistPreviewAsync(SetlistId, CancellationToken.None);
         if (previewResult.IsFailure)
         {
@@ -135,9 +143,9 @@
             return;
         }
 
-        _playlist = previewResult.Value;
+        Playlist = previewResult.Value;
 
-        var matchResult = await PreviewService.MatchTracksWithSpotifyAsync(_playlist, _accessToken, CancellationToken.None);
+        var matchResult = await PreviewService.MatchTracksWithSpotifyAsync(Playlist, _accessToken, CancellationToken.None);
         _loading = false;
         if (matchResult.IsFailure)
         {
@@ -147,13 +155,13 @@
 
     private async Task Submit()
     {
-        if (_playlist is null || _accessToken is null || _userId is null)
+        if (Playlist is null || _accessToken is null || _userId is null)
         {
             return;
         }
 
         _submitting = true;
-        var result = await PreviewService.CreatePlaylistOnSpotifyAsync(_playlist, _userId, _accessToken, CancellationToken.None);
+        var result = await PreviewService.CreatePlaylistOnSpotifyAsync(Playlist, _userId, _accessToken, CancellationToken.None);
         _submitting = false;
 
         if (result.IsFailure)

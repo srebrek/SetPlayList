@@ -1,5 +1,5 @@
 @page "/preview/{SetlistId}"
-@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@rendermode InteractiveServer
 @using System.Net
 @inject PlaylistPreviewService PreviewService
 
@@ -15,14 +15,14 @@ else if (_errorMessage is not null)
 {
     <MudAlert Severity="Severity.Error">@_errorMessage</MudAlert>
 }
-else if (_playlist is not null)
+else if (Playlist is not null)
 {
-    <MudText Typo="Typo.subtitle1" GutterBottom="true" Class="mx-4">@_playlist.Name</MudText>
+    <MudText Typo="Typo.subtitle1" GutterBottom="true" Class="mx-4">@Playlist.Name</MudText>
 
     <MudList T="string" ReadOnly="true">
-        @for (int i = 0; i < _playlist.Tracks.Count; i++)
+        @for (int i = 0; i < Playlist.Tracks.Count; i++)
         {
-            ProposedTrack track = _playlist.Tracks[i];
+            ProposedTrack track = Playlist.Tracks[i];
             int trackNumber = i + 1;
             <MudListItem>
 
@@ -91,7 +91,9 @@ else if (_playlist is not null)
     [Parameter]
     public string SetlistId { get; set; } = string.Empty;
 
-    private ProposedPlaylist? _playlist;
+    [PersistentState(AllowUpdates = true)]
+    public ProposedPlaylist? Playlist { get; set; }
+
     private string? _errorMessage;
     private bool _loading = true;
     private string _loginUrl = "/auth/login";
@@ -99,6 +101,12 @@ else if (_playlist is not null)
     protected override async Task OnInitializedAsync()
     {
         _loginUrl = $"/auth/login?returnUrl={WebUtility.UrlEncode($"/preview/{SetlistId}/spotify")}";
+
+        if (Playlist is not null)
+        {
+            _loading = false;
+            return;
+        }
 
         var result = await PreviewService.GetSetlistPreviewAsync(SetlistId, CancellationToken.None);
         _loading = false;
@@ -108,7 +116,7 @@ else if (_playlist is not null)
             return;
         }
 
-        _playlist = result.Value;
+        Playlist = result.Value;
     }
 
     private static string? BuildSongDetails(ProposedTrack track)
