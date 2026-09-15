@@ -99,7 +99,6 @@
     [CascadingParameter]
     private Task<AuthenticationState>? AuthStateTask { get; set; }
 
-    [PersistentState(AllowUpdates = true)]
     public ProposedPlaylist? Playlist { get; set; }
 
     private string? _accessToken;
@@ -110,13 +109,24 @@
     private bool _playlistSaved;
     private string _loginUrl = "/auth/login";
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         _loginUrl = $"/auth/login?returnUrl={WebUtility.UrlEncode($"/preview/{SetlistId}/spotify")}";
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Never called during prerendering, so prerender always shows just the spinner;
+        // this only runs once the component is actually interactive.
+        if (!firstRender)
+        {
+            return;
+        }
 
         if (AuthStateTask is null)
         {
             _loading = false;
+            StateHasChanged();
             return;
         }
 
@@ -126,12 +136,7 @@
         if (string.IsNullOrEmpty(_accessToken) || string.IsNullOrEmpty(_userId))
         {
             _loading = false;
-            return;
-        }
-
-        if (Playlist is not null)
-        {
-            _loading = false;
+            StateHasChanged();
             return;
         }
 
@@ -140,6 +145,7 @@
         {
             _loading = false;
             _errorMessage = previewResult.Error!.Message;
+            StateHasChanged();
             return;
         }
 
@@ -151,17 +157,28 @@
         {
             _errorMessage = GetErrorMessage(matchResult.Error!);
         }
+
+        StateHasChanged();
     }
 
     private async Task Submit()
     {
-        if (Playlist is null || _accessToken is null || _userId is null)
+        if (Playlist is null || AuthStateTask is null)
         {
             return;
         }
 
+        var authState = await AuthStateTask;
+        string? accessToken = SpotifyClaims.GetAccessToken(authState.User);
+        string? userId = SpotifyClaims.GetUserId(authState.User);
+        if (accessToken is null || userId is null)
+        {
+            _errorMessage = "Your Spotify session expired. Please refresh the page and log in again.";
+            return;
+        }
+
         _submitting = true;
-        var result = await PreviewService.CreatePlaylistOnSpotifyAsync(Playlist, _userId, _accessToken, CancellationToken.None);
+        var result = await PreviewService.CreatePlaylistOnSpotifyAsync(Playlist, userId, accessToken, CancellationToken.None);
         _submitting = false;
 
         if (result.IsFailure)
