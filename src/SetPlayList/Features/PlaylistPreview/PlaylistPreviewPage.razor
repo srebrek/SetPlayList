@@ -2,7 +2,6 @@
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 @using System.Net
 @inject PlaylistPreviewService PreviewService
-@inject NavigationManager Navigation
 
 <PageTitle>SetPlayList - Preview</PageTitle>
 
@@ -71,7 +70,7 @@ else if (_playlist is not null)
                     </MudCardContent>
 
                     <MudCardActions>
-                        <MudButton OnClick="@(() => Navigation.NavigateTo(_loginUrl, forceLoad: true))" Variant="Variant.Text" Color="Color.Primary">
+                        <MudButton Href="@_loginUrl" data-enhance-nav="false" Variant="Variant.Text" Color="Color.Primary">
                             Log in with Spotify
                         </MudButton>
                     </MudCardActions>

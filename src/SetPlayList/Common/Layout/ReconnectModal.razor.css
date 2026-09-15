@@ -20,14 +20,11 @@
         background: rgba(10, 16, 28, 0.5);
     }
 
-    #components-reconnect-modal.components-reconnect-show,
-    #components-reconnect-modal[open],
-    #components-reconnect-modal.components-reconnect-failed,
-    #components-reconnect-modal.components-reconnect-repeated-attempt,
-    #components-reconnect-modal.components-reconnect-paused,
-    #components-reconnect-modal.components-reconnect-resume-failed,
-    #components-reconnect-modal.components-pause,
-    #components-reconnect-modal.components-resume-failed {
+    /* Visibility is driven only by the `open` attribute (set by our JS's
+       .showModal()/.close(), after the delay/navigatingAway gate) — not by
+       Blazor's own automatic state classes, which it applies to this element
+       instantly and unconditionally, bypassing the JS-side delay entirely. */
+    #components-reconnect-modal[open] {
         display: flex;
         align-items: center;
         justify-content: center;
