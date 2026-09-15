@@ -58,16 +58,16 @@
                         }
                         else
                         {
-                            <MudGrid Spacing="2" Class="mt-2">
+                            <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:16px;" class="mt-2">
                                 @foreach (var option in track.Options)
                                 {
                                     var isSelected = track.SelectedTrackId == option.Id;
-                                    <MudItem xs="12" sm="6" md="4">
-                                        <MudCard Outlined="true"
-                                                 Style="@($"cursor:pointer;height:100%;border:2px solid {(isSelected ? "var(--mud-palette-primary)" : "transparent")};")"
+                                    <div style="flex:0 0 calc(33.333% - 11px);max-width:calc(33.333% - 11px);">
+                                        <MudCard Elevation="4"
+                                                 Style="@($"cursor:pointer;height:100%;border:2px solid {(isSelected ? "var(--mud-palette-primary)" : "var(--mud-palette-lines-default)")};")"
                                                  @onclick="() => track.SelectedTrackId = option.Id">
-                                            <MudCardMedia Image="@option.AlbumImageUrl" Height="140" />
-                                            <MudCardContent>
+                                            <MudCardMedia Image="@option.AlbumImageUrl" Style="aspect-ratio:1/1;height:auto;" />
+                                            <MudCardContent Style="max-height:180px;overflow-y:auto;">
                                                 <MudText Typo="Typo.body2">@option.Name</MudText>
                                                 <MudText Typo="Typo.caption">@string.Join(", ", option.Artists)</MudText>
                                                 <MudText Typo="Typo.caption">@option.AlbumName</MudText>
@@ -77,15 +77,15 @@
                                                          Color="@(isSelected ? Color.Primary : Color.Default)" />
                                             </MudCardActions>
                                         </MudCard>
-                                    </MudItem>
+                                    </div>
                                 }
-                            </MudGrid>
+                            </div>
                         }
                     </MudCardContent>
                 </MudCard>
             }
 
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit" Disabled="_submitting">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit" Disabled="_submitting" Class="mb-4">
                 Submit
             </MudButton>
         }
