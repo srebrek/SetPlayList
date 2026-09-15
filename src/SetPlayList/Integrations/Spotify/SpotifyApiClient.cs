@@ -46,7 +46,7 @@ internal sealed partial class SpotifyApiClient(HttpClient httpClient, ILogger<Sp
     {
         using HttpRequestMessage request = new(HttpMethod.Post, $"https://api.spotify.com/v1/users/{userId}/playlists");
         request.Headers.Authorization = new("Bearer", accessToken);
-        request.Content = JsonContent.Create(new { name = playlistName }, options: s_jsonOptions);
+        request.Content = JsonContent.Create(new { name = playlistName, description = "" }, options: s_jsonOptions);
 
         Result<CreatePlaylistResponse> result = await SendAsync<CreatePlaylistResponse>(request, "create playlist", ct);
         return result.IsSuccess ? result.Value.Id : result.Error;
