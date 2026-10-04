@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.HttpOverrides;
 using MudBlazor.Services;
+using SetPlayList.Common;
 using SetPlayList.Common.Components;
 using SetPlayList.Features.PlaylistPreview;
 using SetPlayList.Integrations.Spotify.Auth;
@@ -33,6 +34,7 @@ builder.Services.AddRazorComponents()
 WebApplication app = builder.Build();
 
 app.UseForwardedHeaders();
+app.UseRequestSourceLogging();
 
 if (!app.Environment.IsDevelopment())
 {
